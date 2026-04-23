@@ -69,8 +69,8 @@ export default function EmployeesPage() {
           {filtered.map(emp => (
             <Link to={`/employees/${emp.id}`} key={emp.id} className="card flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-sm font-bold text-primary">
-                  {emp.discResult ? emp.discResult.dominantType : '?'}
+                <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center overflow-hidden">
+                  {emp.discResult ? <span className="text-sm font-bold text-primary">{emp.discResult.dominantType}</span> : <img src="/logo.png" alt="" className="w-6 h-6" />}
                 </div>
                 <div>
                   <div className="font-medium text-gray-900">{emp.name}</div>

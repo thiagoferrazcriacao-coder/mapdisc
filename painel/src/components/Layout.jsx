@@ -31,7 +31,7 @@ export default function Layout() {
     <div className="flex min-h-screen">
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-primary transform transition-transform lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:static lg:translate-x-0`}>
         <div className="flex items-center gap-2 px-6 py-5 text-white">
-          <span className="text-2xl">🧭</span>
+          <img src="/logo.png" alt="MapDISC" className="w-8 h-8" />
           <span className="text-xl font-bold">MapDISC</span>
         </div>
         <nav className="mt-4 flex-1 px-3">

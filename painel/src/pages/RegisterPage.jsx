@@ -33,7 +33,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-dark via-primary to-primary-light px-4 py-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
-          <div className="text-5xl mb-3">🧭</div>
+          <img src="/logo.png" alt="MapDISC" className="w-20 h-20 mx-auto mb-3" />
           <h1 className="text-3xl font-bold text-white">MapDISC</h1>
           <p className="text-white/80 mt-1">Criar sua conta</p>
         </div>
