@@ -15,7 +15,7 @@ export default function InvitationsPage() {
   const loadInvitations = async () => {
     try {
       const data = await api.getInvitations()
-      setInvitations(data)
+      setInvitations(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error(err)
     } finally {
@@ -25,16 +25,17 @@ export default function InvitationsPage() {
 
   const handleCreate = async (e) => {
     e.preventDefault()
-    if (!form.employeeName) return setError('Nome é obrigatório')
+    if (!form.employeeName.trim()) return setError('Nome é obrigatório')
+    if (form.employeeEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.employeeEmail)) return setError('Email inválido')
     setCreating(true)
     setError('')
     try {
-      await api.createInvitation(form)
+      await api.createInvitation({ ...form, employeeName: form.employeeName.trim() })
       setShowModal(false)
       setForm({ employeeName: '', employeeEmail: '' })
-      loadInvitations()
+      await loadInvitations()
     } catch (err) {
-      setError(err.message)
+      setError(err.message || 'Erro ao criar convite. Tente novamente.')
     } finally {
       setCreating(false)
     }
@@ -117,14 +118,14 @@ export default function InvitationsPage() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Novo Convite</h2>
             {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm">{error}</div>}
-            <form onSubmit={handleCreate}>
+            <form onSubmit={handleCreate} noValidate>
               <div className="mb-4">
                 <label className="label">Nome do Funcionário *</label>
-                <input type="text" className="input" value={form.employeeName} onChange={e => setForm(prev => ({ ...prev, employeeName: e.target.value }))} placeholder="Nome completo" required />
+                <input type="text" className="input" value={form.employeeName} onChange={e => setForm(prev => ({ ...prev, employeeName: e.target.value }))} placeholder="Nome completo" />
               </div>
               <div className="mb-6">
                 <label className="label">Email do Funcionário</label>
-                <input type="email" className="input" value={form.employeeEmail} onChange={e => setForm(prev => ({ ...prev, employeeEmail: e.target.value }))} placeholder="email@empresa.com" />
+                <input type="text" className="input" value={form.employeeEmail} onChange={e => setForm(prev => ({ ...prev, employeeEmail: e.target.value }))} placeholder="email@empresa.com" />
               </div>
               <div className="flex gap-3">
                 <button type="button" onClick={() => setShowModal(false)} className="btn-secondary flex-1">Cancelar</button>
