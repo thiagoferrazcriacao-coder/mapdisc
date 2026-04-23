@@ -91,7 +91,7 @@ export default function EmployeeDetailPage() {
       <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-6 mt-2">
         <div className="relative flex-shrink-0">
           <div className="w-32 h-32 rounded-full overflow-hidden flex items-center justify-center"
-            style={{ background: result ? (DISC_COLORS[result.dominantType] + '15') : '#F3F0FF', border: result ? `4px solid ${DISC_COLORS[result.dominantType]}` : '4px solid #6C3AED' }}>
+            style={{ background: result ? (DISC_COLORS[result.dominantType] + '15') : '#EEF4FF', border: result ? `4px solid ${DISC_COLORS[result.dominantType]}` : '4px solid #0057FF' }}>
             {employee.profilePhoto
               ? <img src={employee.profilePhoto} alt={employee.name} className="w-full h-full object-cover" />
               : result
@@ -129,7 +129,7 @@ export default function EmployeeDetailPage() {
                     <PolarGrid />
                     <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12, fontWeight: 600 }} />
                     <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} />
-                    <Radar name="Perfil" dataKey="value" stroke="#6C3AED" fill="#6C3AED" fillOpacity={0.3} />
+                    <Radar name="Perfil" dataKey="value" stroke="#0057FF" fill="#0057FF" fillOpacity={0.3} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>

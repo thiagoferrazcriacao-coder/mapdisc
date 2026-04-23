@@ -69,7 +69,7 @@ export default function EmployeesPage() {
           {filtered.map(emp => (
             <Link to={`/employees/${emp.id}`} key={emp.id} className="card flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: emp.discResult ? (DISC_COLORS[emp.discResult.dominantType] + '20') : '#F3F0FF', border: emp.discResult ? `2px solid ${DISC_COLORS[emp.discResult.dominantType]}` : '2px solid #6C3AED' }}>
+                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: emp.discResult ? (DISC_COLORS[emp.discResult.dominantType] + '20') : '#EEF4FF', border: emp.discResult ? `2px solid ${DISC_COLORS[emp.discResult.dominantType]}` : '2px solid #0057FF' }}>
                   {emp.profilePhoto
                     ? <img src={emp.profilePhoto} alt={emp.name} className="w-full h-full object-cover" />
                     : emp.discResult
