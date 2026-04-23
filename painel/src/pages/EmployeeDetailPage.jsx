@@ -88,11 +88,24 @@ export default function EmployeeDetailPage() {
         Voltar para Funcionários
       </Link>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6 mt-2">
-        <div className="w-96 h-96 rounded-full bg-primary-50 flex items-center justify-center overflow-hidden" style={{ color: result ? DISC_COLORS[result.dominantType] : '#6C3AED' }}>
-          {result ? <span className="text-2xl font-bold">{result.dominantType}</span> : <img src="/logo.png" alt="MapDISC" className="w-64 h-64" />}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-6 mt-2">
+        <div className="relative flex-shrink-0">
+          <div className="w-32 h-32 rounded-full overflow-hidden flex items-center justify-center"
+            style={{ background: result ? (DISC_COLORS[result.dominantType] + '15') : '#F3F0FF', border: result ? `4px solid ${DISC_COLORS[result.dominantType]}` : '4px solid #6C3AED' }}>
+            {employee.profilePhoto
+              ? <img src={employee.profilePhoto} alt={employee.name} className="w-full h-full object-cover" />
+              : result
+                ? <span className="text-4xl font-extrabold" style={{ color: DISC_COLORS[result.dominantType] }}>{result.dominantType}</span>
+                : <img src="/logo.png" alt="MapDISC" className="w-20 h-20" />}
+          </div>
+          {result && (
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-white text-sm font-bold shadow"
+              style={{ backgroundColor: DISC_COLORS[result.dominantType] }}>
+              {result.dominantType} — {DISC_NAMES[result.dominantType]}
+            </div>
+          )}
         </div>
-        <div>
+        <div className="mt-4 sm:mt-0">
           <h1 className="text-2xl font-bold text-gray-900">{employee.name}</h1>
           <p className="text-gray-500">{employee.jobTitle || employee.functionCategories?.join(', ') || '—'}</p>
           <p className="text-sm text-gray-400">{employee.email} {employee.department ? `· ${employee.department}` : ''}</p>

@@ -310,7 +310,7 @@ app.post('/api/disc/submit', async (req, res) => {
     let emp = await dbFindOne('employees', { email: targetEmail, companyId: inv.companyId })
     if (!emp) {
       const eid = uuidv4()
-      emp = { _id: eid, id: eid, companyId: inv.companyId, name: employeeData?.name || inv.employeeName, email: targetEmail, phone: employeeData?.phone || '', department: employeeData?.department || '', jobTitle: employeeData?.jobTitle || '', jobDescription: employeeData?.jobDescription || '', functionCategories: employeeData?.functionCategories || [], createdAt: new Date().toISOString() }
+      emp = { _id: eid, id: eid, companyId: inv.companyId, name: employeeData?.name || inv.employeeName, email: targetEmail, phone: employeeData?.phone || '', department: employeeData?.department || '', jobTitle: employeeData?.jobTitle || '', jobDescription: employeeData?.jobDescription || '', functionCategories: employeeData?.functionCategories || [], profilePhoto: employeeData?.profilePhoto || null, createdAt: new Date().toISOString() }
       await dbInsert('employees', emp)
     }
     const rid = uuidv4()

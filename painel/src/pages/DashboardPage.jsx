@@ -92,8 +92,11 @@ export default function DashboardPage() {
               {completedEmployees.slice(0, 5).map(emp => (
                 <Link to={`/employees/${emp.id}`} key={emp.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-48 h-48 rounded-full bg-primary-50 flex items-center justify-center overflow-hidden">
-                      {emp.discResult ? <span className="text-sm font-bold text-primary">{emp.discResult.dominantType}</span> : <img src="/logo.png" alt="" className="w-32 h-32" />}
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                      style={{ background: DISC_COLORS[emp.discResult?.dominantType] + '20', border: `2px solid ${DISC_COLORS[emp.discResult?.dominantType]}` }}>
+                      {emp.profilePhoto
+                        ? <img src={emp.profilePhoto} alt={emp.name} className="w-full h-full object-cover" />
+                        : <span className="text-sm font-bold" style={{ color: DISC_COLORS[emp.discResult?.dominantType] }}>{emp.discResult?.dominantType}</span>}
                     </div>
                     <div>
                       <div className="text-sm font-medium text-gray-900">{emp.name}</div>

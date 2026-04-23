@@ -69,8 +69,12 @@ export default function EmployeesPage() {
           {filtered.map(emp => (
             <Link to={`/employees/${emp.id}`} key={emp.id} className="card flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3">
-                <div className="w-64 h-64 rounded-full bg-primary-50 flex items-center justify-center overflow-hidden">
-                  {emp.discResult ? <span className="text-sm font-bold text-primary">{emp.discResult.dominantType}</span> : <img src="/logo.png" alt="" className="w-40 h-40" />}
+                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: emp.discResult ? (DISC_COLORS[emp.discResult.dominantType] + '20') : '#F3F0FF', border: emp.discResult ? `2px solid ${DISC_COLORS[emp.discResult.dominantType]}` : '2px solid #6C3AED' }}>
+                  {emp.profilePhoto
+                    ? <img src={emp.profilePhoto} alt={emp.name} className="w-full h-full object-cover" />
+                    : emp.discResult
+                      ? <span className="text-lg font-bold" style={{ color: DISC_COLORS[emp.discResult.dominantType] }}>{emp.discResult.dominantType}</span>
+                      : <img src="/logo.png" alt="" className="w-8 h-8" />}
                 </div>
                 <div>
                   <div className="font-medium text-gray-900">{emp.name}</div>

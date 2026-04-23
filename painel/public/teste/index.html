@@ -65,6 +65,13 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;backgroun
 .welcome-sub{font-size:16px;opacity:.9;margin-bottom:32px;line-height:1.5}
 .welcome-btn{background:#fff;color:#6C3AED;border:none;border-radius:12px;padding:14px 40px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation}
 textarea.input{resize:vertical;min-height:80px}
+.photo-upload-area{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:16px}
+.photo-preview{width:120px;height:120px;border-radius:50%;background:#F3F0FF;border:3px solid #6C3AED;display:flex;align-items:center;justify-content:center;overflow:hidden;margin:0 auto}
+.photo-preview img{width:100%;height:100%;object-fit:cover}
+.photo-preview .placeholder-icon{font-size:48px;color:#A78BFA}
+.photo-btns{display:flex;gap:10px;width:100%;justify-content:center}
+.photo-btn{flex:1;max-width:180px;padding:10px 8px;border:2px solid #6C3AED;border-radius:10px;background:#fff;color:#6C3AED;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;touch-action:manipulation;transition:all .15s}
+.photo-btn:active{background:#F3F0FF}
 </style>
 </head>
 <body>
@@ -78,6 +85,20 @@ textarea.input{resize:vertical;min-height:80px}
 <div id="personal" class="screen">
 <div class="card">
 <h2 style="font-size:20px;font-weight:700;margin-bottom:20px;text-align:center">Seus Dados</h2>
+
+<div class="photo-upload-area">
+<div class="photo-preview" id="photoPreview">
+  <span class="placeholder-icon">👤</span>
+</div>
+<p style="font-size:13px;color:#6B7280;text-align:center">Adicione sua foto</p>
+<div class="photo-btns">
+  <button class="photo-btn" onclick="openGallery()">🖼️ Galeria</button>
+  <button class="photo-btn" onclick="openCamera()">📷 Câmera</button>
+</div>
+<input type="file" id="photoGallery" accept="image/*" style="display:none" onchange="handlePhoto(this)">
+<input type="file" id="photoCamera" accept="image/*" capture="user" style="display:none" onchange="handlePhoto(this)">
+</div>
+
 <div class="mb-4">
 <label class="label">Nome completo *</label>
 <input class="input" id="name" type="text" placeholder="Seu nome completo" autocomplete="name">
@@ -173,31 +194,59 @@ function getShuffledQuestions() {
 }
 
 const QUESTIONS = [
-{group:1,statements:[{letter:'A',text:'Eu tomo decisões rapidamente e assumo o controle da situação'},{letter:'B',text:'Eu gosto de motivar e influenciar as pessoas ao meu redor'},{letter:'C',text:'Eu sou paciente e perseverante, prefiro trabalhar com constância'},{letter:'D',text:'Eu verifico todos os detalhes e sigo procedimentos com precisão'}]},
-{group:2,statements:[{letter:'A',text:'Eu enfrento desafios de frente e não recuo facilmente'},{letter:'B',text:'Eu me comunico com facilidade e faço amizades rapidamente'},{letter:'C',text:'Eu sou leal e valorizo relações estáveis e duradouras'},{letter:'D',text:'Eu organizo informações de forma lógica e sistemática'}]},
-{group:3,statements:[{letter:'A',text:'Eu sou direto e vou ao ponto sem rodeios'},{letter:'B',text:'Eu trago energia positiva e entusiasmo para qualquer ambiente'},{letter:'C',text:'Eu prefiro ambientes previsíveis e rotinas tranquilas'},{letter:'D',text:'Eu valorizo qualidade e perfeição em tudo que faço'}]},
-{group:4,statements:[{letter:'A',text:'Eu lidero naturalmente e as pessoas costumam me seguir'},{letter:'B',text:'Eu me expresso bem e gosto de falar em público'},{letter:'C',text:'Eu sou um bom ouvinte e ofereço apoio emocional aos outros'},{letter:'D',text:'Eu sigo regras e expectativas com comprometimento total'}]},
-{group:5,statements:[{letter:'A',text:'Eu me sinto confortável tomando decisões sob pressão'},{letter:'B',text:'Eu gosto de celebrar conquistas e reconhecer o time'},{letter:'C',text:'Eu prefiro trabalhar em equipe do que sozinho'},{letter:'D',text:'Eu analiso dados e evidências antes de tomar qualquer decisão'}]},
-{group:6,statements:[{letter:'A',text:'Eu busco resultados e me importo com o objetivo final'},{letter:'B',text:'Eu sou carismático e consigo convencer pessoas facilmente'},{letter:'C',text:'Eu demonstro empatia e me preocupo com o bem-estar de todos'},{letter:'D',text:'Eu mantenho tudo documentado e organizado de forma impecável'}]},
-{group:7,statements:[{letter:'A',text:'Eu aceito riscos calculados para alcançar grandes objetivos'},{letter:'B',text:'Eu networko naturalmente e mantenho contato com muitas pessoas'},{letter:'C',text:'Eu sou confiável e as pessoas podem contar comigo sempre'},{letter:'D',text:'Eu priorizo a exatidão e não deixo nada pela metade'}]},
-{group:8,statements:[{letter:'A',text:'Eu defendo minhas opiniões com firmeza e convicção'},{letter:'B',text:'Eu adapto meu estilo de comunicação para cada audiência'},{letter:'C',text:'Eu espero pacientemente os resultados em vez de forçar o ritmo'},{letter:'D',text:'Eu crio processos e checklists para garantir consistência'}]},
-{group:9,statements:[{letter:'A',text:'Eu valorizo a eficiência acima de tudo e elimino desperdícios'},{letter:'B',text:'Eu gosto de ser o centro das atenções e animar o grupo'},{letter:'C',text:'Eu prefiro estabilidade e evito mudanças bruscas'},{letter:'D',text:'Eu me asseguro de que tudo está correto antes de entregar'}]},
-{group:10,statements:[{letter:'A',text:'Eu me aposso rapidamente de novos projetos e responsabilidades'},{letter:'B',text:'Eu encontro oportunidades de colaborar e criar conexões'},{letter:'C',text:'Eu executo tarefas com dedicação e sem reclamar'},{letter:'D',text:'Eu estabeleço padrões altos e exijo o melhor de mim e dos outros'}]},
-{group:11,statements:[{letter:'A',text:'Eu aceito confrontos quando necessário para resolver problemas'},{letter:'B',text:'Eu espontaneamente me envolvo em atividades sociais'},{letter:'C',text:'Eu construo confiança através de ações consistentes no tempo'},{letter:'D',text:'Eu me preparo minuciosamente para cada situação'}]},
-{group:12,statements:[{letter:'A',text:'Eu traço metas ambiciosas e trabalho duro para alcançá-las'},{letter:'B',text:'Eu gero ideias criativas e apresento soluções inovadoras'},{letter:'C',text:'Eu priorizo harmonia e evito conflitos desnecessários'},{letter:'D',text:'Eu mantenho registros detalhados de tudo que é importante'}]},
-{group:13,statements:[{letter:'A',text:'Eu competo para vencer e me destaco nos desafios'},{letter:'B',text:'Eu envolvo outros no processo e crio senso de equipe'},{letter:'C',text:'Eu cumpro promessas e honro compromissos sem hesitar'},{letter:'D',text:'Eu investigo a fundo para entender as causas dos problemas'}]},
-{group:14,statements:[{letter:'A',text:'Eu delego tarefas e espero execução imediata'},{letter:'B',text:'Eu chamo a atenção positivamente e elogio em público'},{letter:'C',text:'Eu ofereço suporte constante e meu apoio é inabalável'},{letter:'D',text:'Eu faço avaliações objetivas baseadas em fatos concretos'}]},
-{group:15,statements:[{letter:'A',text:'Eu me movo rapidamente e fico impaciente com lentidão'},{letter:'B',text:'Eu me expresso com gestos e emoções visíveis'},{letter:'C',text:'Eu sou tolerante e perdão erros com facilidade'},{letter:'D',text:'Eu questiono tudo que não parece lógico ou consistente'}]},
-{group:16,statements:[{letter:'A',text:'Eu determino direções e não gosto de ser contrariado'},{letter:'B',text:'Eu visualizo possibilidades fascinantes e contagio os outros'},{letter:'C',text:'Eu equilíbro as necessidades do grupo e busco consenso'},{letter:'D',text:'Eu critico ideias para encontrar falhas e melhorá-las'}]},
-{group:17,statements:[{letter:'A',text:'Eu produzo resultados mesmo com recursos limitados'},{letter:'B',text:'Eu simplificjo o complexo e comunico de forma envolvente'},{letter:'C',text:'Eu me sintonizo com as necessidades dos outros e ajo com gentileza'},{letter:'D',text:'Eu considero riscos apenas quando os dados suportam a decisão'}]},
-{group:18,statements:[{letter:'A',text:'Eu assumo decisões difíceis que outros evitam'},{letter:'B',text:'Eu transformo ideias abstratas em narrativas cativantes'},{letter:'C',text:'Eu medianjo conflitos e busco soluções onde todos ganham'},{letter:'D',text:'Eu estudo padrões e tendências para prever resultados'}]},
-{group:19,statements:[{letter:'A',text:'Eu não temo confronto e defendo meus pontos com firmeza'},{letter:'B',text:'Eu me conecto emocionalmente e crio laços fortes rapidamente'},{letter:'C',text:'Eu mantenho a calma em situações de crise e estabilidade'},{letter:'D',text:'Eu reviso cuidadosamente antes de aprovar qualquer entrega'}]},
-{group:20,statements:[{letter:'A',text:'Eu priorizo ação sobre reflexão e decido rápido'},{letter:'B',text:'Eu me destaco socialmente e gosto de eventos e encontros'},{letter:'C',text:'Eu valorizo tradições e mantenho o que já funciona'},{letter:'D',text:'Eu padronizo processos para eliminar variabilidade'}]},
-{group:21,statements:[{letter:'A',text:'Eu cobro resultados das pessoas e espero alta performance'},{letter:'B',text:'Eu energizjo equipes desmotivadas com meu otimismo'},{letter:'C',text:'Eu ofereço ajuda antes mesmo de ser solicitado'},{letter:'D',text:'Eu identifico inconsistências que outros não percebem'}]},
-{group:22,statements:[{letter:'A',text:'Eu desafio o status quo e proponho mudanças ousadas'},{letter:'B',text:'Eu conto histórias que inspiram e engajam as pessoas'},{letter:'C',text:'Eu espero o momento certo e não forço situações'},{letter:'D',text:'Eu classifico e categorizo informações para facilitar decisões'}]},
-{group:23,statements:[{letter:'A',text:'Eu mantenho o foco no objetivo mesmo com distrações'},{letter:'B',text:'Eu descubro talentos nas pessoas e os incentivo a brilhar'},{letter:'C',text:'Eu mantenho relações de longo prazo e valorizo fidelidade'},{letter:'D',text:'Eu aplico metodologias testadas e validadas no trabalho'}]},
-{group:24,statements:[{letter:'A',text:'Eu assumo responsabilidade total e não fujo de obrigações'},{letter:'B',text:'Eu inspirajo a todos e deixo marca positiva por onde passo'},{letter:'C',text:'Eu crijo ambientes seguros e acolhedores para a equipe'},{letter:'D',text:'Eu garanto que regulamentos e normas sejam cumpridos à risca'}]}
+{group:1,statements:[{letter:'A',text:'Quando surge uma discussão em família, eu logo tomo a frente e digo o que precisa ser dito'},{letter:'B',text:'Adoro animar os encontros com histórias e brincadeiras'},{letter:'C',text:'Prefiro ouvir a todos antes de opinar'},{letter:'D',text:'Analiso a situação por todos os ângulos antes de me posicionar'}]},
+{group:2,statements:[{letter:'A',text:'Se algo me irrita, eu falo na hora, direto ao ponto'},{letter:'B',text:'Prefiro aliviar a tensão com uma conversa leve e bem-humorada'},{letter:'C',text:'Espero o momento certo para abordar o assunto sem criar conflito'},{letter:'D',text:'Penso bem em todas as consequências antes de reagir'}]},
+{group:3,statements:[{letter:'A',text:'Quando escolho onde vamos jantar, eu decido logo sem ficar perguntando a todos'},{letter:'B',text:'Adoro lugares cheios de gente, música e agito'},{letter:'C',text:'Prefiro lugares tranquilos onde todos se sintam à vontade'},{letter:'D',text:'Pesquiso avaliações, cardápio e localização antes de escolher'}]},
+{group:4,statements:[{letter:'A',text:'Quando começo um projeto pessoal, vou fundo e não desisto até terminar'},{letter:'B',text:'Gosto de contar para os amigos o que estou fazendo e pedir opiniões'},{letter:'C',text:'Prefiro avançar devagar e com consistência, sem me apressar'},{letter:'D',text:'Planejo cada etapa com cuidado antes de dar o primeiro passo'}]},
+{group:5,statements:[{letter:'A',text:'Se eu acho que estou certo, defendo minha opinião mesmo estando sozinho'},{letter:'B',text:'Gosto de convencer as pessoas da minha ideia de forma animada e entusiasmada'},{letter:'C',text:'Aceito as ideias dos outros com facilidade para manter a harmonia'},{letter:'D',text:'Só mudo de opinião quando vejo dados ou argumentos concretos'}]},
+{group:6,statements:[{letter:'A',text:'Quando saio para um lugar novo, exploro tudo por conta própria sem precisar de guia'},{letter:'B',text:'Adoro conhecer pessoas novas e faço amigos em qualquer lugar que vou'},{letter:'C',text:'Prefiro ambientes familiares onde me sinto seguro e à vontade'},{letter:'D',text:'Pesquiso antes de ir para saber exatamente o que esperar do lugar'}]},
+{group:7,statements:[{letter:'A',text:'Se há uma fila ou demora, logo busco uma solução alternativa'},{letter:'B',text:'Aproveito a espera para puxar papo com quem está por perto'},{letter:'C',text:'Espero pacientemente sem me estressar com a situação'},{letter:'D',text:'Calculo se compensa esperar ou se é melhor tentar em outro horário'}]},
+{group:8,statements:[{letter:'A',text:'Nas atividades físicas, gosto de me superar e bater meus próprios recordes'},{letter:'B',text:'Prefiro exercícios em grupo, onde tem energia e animação coletiva'},{letter:'C',text:'Gosto de caminhadas tranquilas ou atividades sem pressão de rendimento'},{letter:'D',text:'Sigo um protocolo de treino estruturado baseado em metas e progresso'}]},
+{group:9,statements:[{letter:'A',text:'Quando decido fazer algo, executo logo sem esperar o momento perfeito'},{letter:'B',text:'Antes de agir, gosto de compartilhar a ideia com amigos para animar todos'},{letter:'C',text:'Prefiro esperar até ter certeza de que é o momento certo'},{letter:'D',text:'Levanto todas as informações necessárias antes de tomar qualquer ação'}]},
+{group:10,statements:[{letter:'A',text:'Quando jogo algum jogo, o que importa mesmo é vencer'},{letter:'B',text:'Adoro jogar com muita gente e tornar o jogo em uma festa animada'},{letter:'C',text:'Prefiro que todos se divirtam, ganhar é completamente secundário'},{letter:'D',text:'Estudo as regras a fundo para jogar com a melhor estratégia possível'}]},
+{group:11,statements:[{letter:'A',text:'Se tem algo errado em casa, resolvo na hora sem deixar acumular'},{letter:'B',text:'Sugiro uma solução de forma animada e contagio os outros a ajudarem'},{letter:'C',text:'Resolvo aos poucos, no ritmo que não atrapalhe a rotina de ninguém'},{letter:'D',text:'Investigo a causa do problema antes de propor qualquer solução'}]},
+{group:12,statements:[{letter:'A',text:'Nas compras, decido rápido pelo que mais me chama atenção'},{letter:'B',text:'Gosto de ir às compras acompanhado e sempre peço opinião dos amigos'},{letter:'C',text:'Prefiro comprar sempre as mesmas marcas que já sei que funcionam'},{letter:'D',text:'Comparo preços, avaliações e especificações antes de decidir'}]},
+{group:13,statements:[{letter:'A',text:'Quando planejo uma viagem, defino o destino e vou, sem muita deliberação'},{letter:'B',text:'Prefiro viagens com grupos grandes, cheias de programas e novos encontros'},{letter:'C',text:'Gosto de roteiros tranquilos sem muita correria ou imprevistos'},{letter:'D',text:'Planejo cada detalhe: hotel, transporte, roteiro e orçamento com antecedência'}]},
+{group:14,statements:[{letter:'A',text:'Quando há discordância em família, eu tomo uma posição e defendo com firmeza'},{letter:'B',text:'Busco o consenso usando bom humor para desanuviar o clima'},{letter:'C',text:'Prefiro ceder em pequenos pontos para manter a paz e o bem-estar de todos'},{letter:'D',text:'Apresento argumentos racionais para embasar minha posição'}]},
+{group:15,statements:[{letter:'A',text:'No dia a dia, gosto de ser quem propõe as atividades e coordena o grupo'},{letter:'B',text:'Sou sempre o primeiro a sugerir uma nova aventura ou programa diferente'},{letter:'C',text:'Fico feliz em participar do que os outros propõem, sem precisar liderar'},{letter:'D',text:'Prefiro atividades bem planejadas onde sei o que vai acontecer'}]},
+{group:16,statements:[{letter:'A',text:'Quando tenho um objetivo pessoal, vou atrás com força e determinação'},{letter:'B',text:'Divulgo meu objetivo e encontro parceiros animados para a jornada'},{letter:'C',text:'Avanço devagar e de forma consistente, sem pressão ou urgência'},{letter:'D',text:'Defino metas claras, faço um plano e acompanho o progresso'}]},
+{group:17,statements:[{letter:'A',text:'Se alguém me lança um desafio, aceito de cara e mostro que consigo'},{letter:'B',text:'Encaro o desafio de forma divertida, transformando em brincadeira animada'},{letter:'C',text:'Avalio com calma se quero ou não participar do desafio'},{letter:'D',text:'Só aceito o desafio se tiver informações suficientes para realizá-lo'}]},
+{group:18,statements:[{letter:'A',text:'Quando começo um filme ou série, termino até o fim mesmo que não esteja gostando'},{letter:'B',text:'Prefiro assistir com amigos e comentar cada cena juntos'},{letter:'C',text:'Gosto de filmes leves que não causam ansiedade ou tensão'},{letter:'D',text:'Leio sinopses e críticas antes de escolher o que assistir ou ler'}]},
+{group:19,statements:[{letter:'A',text:'Quando tem algo errado com um produto ou serviço, reclamo imediatamente'},{letter:'B',text:'Prefiro resolver com simpatia e um sorriso, sem criar constrangimento'},{letter:'C',text:'Deixo passar, a menos que seja algo realmente grave'},{letter:'D',text:'Registro tudo por escrito e apresento os detalhes do problema de forma clara'}]},
+{group:20,statements:[{letter:'A',text:'Nas decisões de família, costumo ser quem bate o martelo'},{letter:'B',text:'Proponho as ideias mais animadas e convenço os outros a aderirem'},{letter:'C',text:'Sigo a maioria, o importante é que todos estejam bem e felizes'},{letter:'D',text:'Analiso cada opção com prós e contras antes de dar minha opinião'}]},
+{group:21,statements:[{letter:'A',text:'Quando monto algo em casa, sigo minha intuição sem precisar ler o manual'},{letter:'B',text:'Prefiro chamar alguém para fazer junto e tornar em momento divertido'},{letter:'C',text:'Sigo as instruções passo a passo com calma, sem pular etapas'},{letter:'D',text:'Leio todo o manual primeiro, só então começo a montagem'}]},
+{group:22,statements:[{letter:'A',text:'Nas redes sociais, publico o que penso sem muito filtro ou hesitação'},{letter:'B',text:'Amo interagir, curtir, comentar e criar conteúdo para compartilhar'},{letter:'C',text:'Prefiro consumir do que publicar e raramente exponho minha vida pessoal'},{letter:'D',text:'Penso muito antes de publicar, revisando para não dar margem a mal-entendidos'}]},
+{group:23,statements:[{letter:'A',text:'Quando me comprometo com algo pessoal, cumpro no prazo ou antes dele'},{letter:'B',text:'Envolvo outras pessoas no que me comprometi para tornar mais animado'},{letter:'C',text:'Cumpro o compromisso com calma e sem alarde, no meu ritmo'},{letter:'D',text:'Me certifico de entender todos os detalhes antes de me comprometer'}]},
+{group:24,statements:[{letter:'A',text:'Se algo está me incomodando, eu falo na hora, sem guardar para mim'},{letter:'B',text:'Prefiro expressar meus sentimentos de forma aberta e expressiva'},{letter:'C',text:'Guardo para mim e espero o momento certo para falar com cuidado'},{letter:'D',text:'Organizo meus pensamentos com calma antes de expressar qualquer sentimento'}]}
 ]
+
+let profilePhotoBase64 = null
+
+function openGallery() { document.getElementById('photoGallery').click() }
+function openCamera() { document.getElementById('photoCamera').click() }
+
+function handlePhoto(input) {
+  const file = input.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = function(e) {
+    const img = new Image()
+    img.onload = function() {
+      const canvas = document.createElement('canvas')
+      const MAX = 400
+      let w = img.width, h = img.height
+      if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX } }
+      else { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX } }
+      canvas.width = w; canvas.height = h
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+      profilePhotoBase64 = canvas.toDataURL('image/jpeg', 0.75)
+      const preview = document.getElementById('photoPreview')
+      preview.innerHTML = '<img src="' + profilePhotoBase64 + '" alt="Foto">'
+    }
+    img.src = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
 
 let invitationToken = null
 let invitationData = null
@@ -246,6 +295,7 @@ function validatePersonal() {
   employeeData.email = email
   employeeData.phone = document.getElementById('phone').value.trim()
   employeeData.department = document.getElementById('department').value.trim()
+  if (profilePhotoBase64) employeeData.profilePhoto = profilePhotoBase64
   goToScreen('functions')
 }
 
@@ -424,6 +474,10 @@ function resetAll() {
   selectedLeast = null
   shuffledQuestions = null
   employeeData = {}
+  profilePhotoBase64 = null
+  document.getElementById('photoPreview').innerHTML = '<span class="placeholder-icon">👤</span>'
+  document.getElementById('photoGallery').value = ''
+  document.getElementById('photoCamera').value = ''
   document.getElementById('name').value = ''
   document.getElementById('email').value = ''
   document.getElementById('phone').value = ''
