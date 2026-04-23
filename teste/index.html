@@ -150,6 +150,26 @@ const DISC_NAMES = {D:'Dominante',I:'Influente',S:'Estável',C:'Consciencioso'}
 
 const CHOICE_MAP = {A:'D',B:'I',C:'S',D:'C'}
 
+function shuffleArray(arr) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp
+  }
+  return a
+}
+
+let shuffledQuestions = null
+
+function getShuffledQuestions() {
+  if (shuffledQuestions) return shuffledQuestions
+  shuffledQuestions = QUESTIONS.map(q => ({
+    group: q.group,
+    statements: shuffleArray(q.statements)
+  }))
+  return shuffledQuestions
+}
+
 const QUESTIONS = [
 {group:1,statements:[{letter:'A',text:'Eu tomo decisões rapidamente e assumo o controle da situação'},{letter:'B',text:'Eu gosto de motivar e influenciar as pessoas ao meu redor'},{letter:'C',text:'Eu sou paciente e perseverante, prefiro trabalhar com constância'},{letter:'D',text:'Eu verifico todos os detalhes e sigo procedimentos com precisão'}]},
 {group:2,statements:[{letter:'A',text:'Eu enfrento desafios de frente e não recuo facilmente'},{letter:'B',text:'Eu me comunico com facilidade e faço amizades rapidamente'},{letter:'C',text:'Eu sou leal e valorizo relações estáveis e duradouras'},{letter:'D',text:'Eu organizo informações de forma lógica e sistemática'}]},
@@ -252,12 +272,14 @@ function validateFunctions() {
   employeeData.functionCategories = [...selectedCategories]
   currentQuestion = 0
   responses = []
+  shuffledQuestions = null
   renderQuestion()
   goToScreen('test')
 }
 
 function renderQuestion() {
-  const q = QUESTIONS[currentQuestion]
+  const qs = getShuffledQuestions()
+  const q = qs[currentQuestion]
   selectedMost = null
   selectedLeast = null
   const pct = Math.round(((currentQuestion + 1) / 24) * 100)
@@ -267,7 +289,7 @@ function renderQuestion() {
   document.getElementById('nextBtn').disabled = true
   const area = document.getElementById('questionArea')
   area.innerHTML = q.statements.map(s => 
-    '<div class="statement-card" data-letter="' + s.letter + '" onclick="selectStatement(this)">' +
+    '<div class="statement-card" data-factor="' + s.factor + '" onclick="selectStatement(this)">' +
     '<span>' + s.text + '</span>' +
     '<span class="badge" style="display:none"></span>' +
     '</div>'
@@ -275,24 +297,24 @@ function renderQuestion() {
 }
 
 function selectStatement(card) {
-  const letter = card.dataset.letter
-  if (selectedMost === letter) {
+  const factor = card.dataset.factor
+  if (selectedMost === factor) {
     selectedMost = null
     card.classList.remove('most')
     card.querySelector('.badge').style.display = 'none'
-  } else if (selectedLeast === letter) {
+  } else if (selectedLeast === factor) {
     selectedLeast = null
     card.classList.remove('least')
     card.querySelector('.badge').style.display = 'none'
   } else if (!selectedMost) {
-    if (selectedLeast === letter) return
-    selectedMost = letter
+    if (selectedLeast === factor) return
+    selectedMost = factor
     card.classList.add('most')
     card.querySelector('.badge').textContent = '✓ Mais'
     card.querySelector('.badge').style.display = 'inline'
   } else if (!selectedLeast) {
-    if (selectedMost === letter) return
-    selectedLeast = letter
+    if (selectedMost === factor) return
+    selectedLeast = factor
     card.classList.add('least')
     card.querySelector('.badge').textContent = '✗ Menos'
     card.querySelector('.badge').style.display = 'inline'
@@ -398,6 +420,7 @@ function resetAll() {
   selectedCategories = []
   selectedMost = null
   selectedLeast = null
+  shuffledQuestions = null
   employeeData = {}
   document.getElementById('name').value = ''
   document.getElementById('email').value = ''

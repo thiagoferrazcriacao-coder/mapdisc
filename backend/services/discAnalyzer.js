@@ -1,4 +1,4 @@
-const CHOICE_MAP = { A: 'D', B: 'I', C: 'S', D: 'C' }
+const CHOICE_MAP = { A: 'D', B: 'I', C: 'S', D: 'C', D: 'D', I: 'I', S: 'S', C: 'C' }
 
 export const DISC_QUESTIONS = [
   { group: 1, statements: [
@@ -167,26 +167,122 @@ export const TYPE_DESCRIPTIONS = {
     name: 'Dominante',
     shortName: 'D',
     description: 'Pessoas com perfil D são diretas, decididas e orientadas a resultados. Lideram naturalmente, enfrentam desafios e valorizam eficiência. Podem ser vistas como autoritárias ou impacientes.',
-    color: '#EF4444'
+    color: '#EF4444',
+    strengths: ['Decisão rápida e firmeza', 'Orientação a resultados', 'Capacidade de liderança', 'Resiliência diante de desafios', 'Coragem para assumir riscos', 'Foco na eficiência'],
+    weaknesses: ['Impaciência com processos lentos', 'Tendência a ser autoritário', 'Dificuldade em delegar', 'Pode insensível com sentimentos alheios', 'Excessiva competitividade', 'Resistência a feedbacks'],
+    attentionPoints: ['Monopolizar decisões e não ouvir a equipe', 'Pressionar demais por resultados gerando burnout', 'Ignorar o processo e focar apenas no resultado', 'Ser perceived como agressivo ou intimidador'],
+    howToManage: ['Deixe claro o objetivo e o prazo — D's se motivam com metas claras', 'Apresente fatos e dados, não opiniões', 'Dê autonomia dentro de limites definidos', 'Reconheça resultados publicamente', 'Não leve desafios pessoais — é orientação a resultado, não ataque pessoal'],
+    howToDodgeNegatives: ['Pratique escuta ativa: faça perguntas antes de dar soluções', 'Antes de decidir sozinho, pergunte a opinião de ao menos 2 pessoas', 'Reconheça esforços, não apenas resultados', 'Substitua "faça já" por "como podemos resolver isso juntos?"'],
+    idealEnvironment: 'Ambientes competitivos, com metas claras e autonomia para decidir.',
+    stressTriggers: 'Indecisão, processos burocráticos lentos, micromanagement',
+    motivationKeys: 'Desafios, poder de decisão, reconhecimento por resultados',
+    communicationStyle: 'Direta, objetiva, vai ao ponto. Prefere resumos e decisões.'
   },
   I: {
     name: 'Influente',
     shortName: 'I',
     description: 'Pessoas com perfil I são entusiasmadas, comunicativas e persuasivas. Conectam-se facilmente, inspiram equipes e valorizam relacionamentos. Podem ser vistas como impulsivas ou dispersas.',
-    color: '#F59E0B'
+    color: '#F59E0B',
+    strengths: ['Comunicação e carisma', 'Capacidade de inspirar e motivar', 'Networking natural', 'Criatividade e visão', 'Adaptabilidade social', 'Entusiasmo contagiante'],
+    weaknesses: ['Impulsividade e falta de follow-through', 'Dificuldade com detalhes e rotinas', 'Tendência a prometer mais do que pode entregar', 'Desorganização e distração', 'Evita conflitos a todo custo', 'Superficialidade em relações'],
+    attentionPoints: ['Prometer mais do que consegue cumprir', 'Focar tanto nas pessoas que perde o foco nos resultados', 'Evitar confrontos necessários', 'Ser perceived como superficial ou inconsistente'],
+    howToManage: ['Dê atenção pessoal e reconhecimento — I's se motivam com aprovação', 'Deixe espaço para criatividade e社交ização', 'Associe tarefas a impacto nas pessoas', 'Defina prazos claros e check-ins frequentes', 'Ajude a priorizar e focar'],
+    howToDodgeNegatives: ['Use listas de verificação para não perder detalhes', 'Antes de comprometer, pergunte: "Consigo entregar isso no prazo sem comprometer nada?"', 'Reserve tempo silencioso para refletir antes de decidir', 'Pratique fechar ciclos: toda promessa vira uma tarefa com prazo'],
+    idealEnvironment: 'Ambientes sociais, colaborativos, com variedade e Reconhecimento.',
+    stressTriggers: 'Isolamento, críticas públicas, rotinas monótonas, falta de reconhecimento',
+    motivationKeys: 'Reconhecimento público, interação social, liberdade criativa, variedade',
+    communicationStyle: 'Expressiva, emocional, usa histórias e exemplos. Prefere conversar cara a cara.'
   },
   S: {
     name: 'Estável',
     shortName: 'S',
     description: 'Pessoas com perfil S são pacientes, leais e confiáveis. Valorizam harmonia, oferecem suporte constante e preferem ambientes previsíveis. Podem ser vistas como resistentes a mudanças.',
-    color: '#10B981'
+    color: '#10B981',
+    strengths: ['Confiabilidade e consistência', 'Paciência e empatia', 'Lealdade e dedication', 'Capacidade de escuta ativa', 'Trabalho em equipe excepcional', 'Estabilidade emocional'],
+    weaknesses: ['Resistência a mudanças', 'Evita conflitos a ponto de se prejudicar', 'Dificuldade em dizer não', 'Pode ser lento para tomar decisões', 'Subestima suas próprias capacidades', 'Tendência a se sobrecarregar por não delegar'],
+    attentionPoints: ['Aceitar tudo sem questionar, acumulando frustração', 'Demorar demais para se posicionar ou decidir', 'Não pedir ajuda quando sobrecarregado', 'Ser perceived como passivo ou desmotivado'],
+    howToManage: ['Seja gentil e paciente — S's respondem a abordagem calorosa', 'Apresente mudanças gradualmente com explicação clara', 'Reconheça estabilidade e confiabilidade', 'Dê tempo para se adaptar a novas situações', 'Crie ambiente seguro para expressar opiniões'],
+    howToDodgeNegatives: ['Pratique dizer não pelo menos 1 vez por dia em situações pequenas', 'Quando sentir resistência a uma mudança, pergunte: "Qual é o pior que pode acontecer?"', 'Defina marcos pessoais claros: o que aceito e o que não aceito', 'Antes de assumir mais trabalho, pergunte: "Isso está na minha lista de prioridades?"'],
+    idealEnvironment: 'Ambientes estáveis, colaborativos, com rotina clara e segurança.',
+    stressTriggers: 'Mudanças bruscas, conflitos, falta de segurança, prazos imprevisíveis',
+    motivationKeys: 'Segurança, pertencimento, reconhecimento silencioso, trabalho em equipe',
+    communicationStyle: 'Cuidadosa, calma, prefere ouvir antes de falar. Valoriza tom amigável.'
   },
   C: {
     name: 'Consciencioso',
     shortName: 'C',
     description: 'Pessoas com perfil C são analíticas, precisas e sistemáticas. Valorizam qualidade, seguem procedimentos e buscam exatidão. Podem ser vistas como perfeccionistas ou excessivamente cautelosas.',
-    color: '#3B82F6'
+    color: '#3B82F6',
+    strengths: ['Precisão e atenção aos detalhes', 'Pensamento analítico e lógico', 'Organização e método', 'Compromisso com qualidade', 'Fiabilidade nas entregas', 'Capacidade de encontrar erros e inconsistências'],
+    weaknesses: ['Perfeccionismo que atrasa entregas', 'Excesso de análise que paralisa decisões', 'Dificuldade com ambiguidade', 'Pode ser perceived como crítico ou frio', 'Resistência a assumir riscos', 'Foco no que está errado em vez do que está certo'],
+    attentionPoints: ['Paralisia por análise: detalhar demais e não avançar', 'Criticar mais do que elogiar, desmotivando a equipe', 'Elevados padrões que ninguém consegue atingir', 'Ser perceived como inflexível ou difídecil de agradar'],
+    howToManage: ['Apresente dados e evidências — C's decidem com fatos', 'Defina padrões claros e expectativas mensuráveis', 'Dê tempo para análise antes de exigir resposta', 'Reconheça a qualidade e precisão do trabalho', 'Permita que revisem e validem antes de finalizar'],
+    howToDodgeNegatives: ['Defina limites de tempo para análise: "decido em 1 hora" e cumpra', 'Para cada crítica, faça 1 elogio específico', 'Aceite que "bom o suficiente" às vezes é o melhor caminho', 'Pratique agir com 80% das informações em vez de esperar 100%'],
+    idealEnvironment: 'Ambientes organizados, com processos claros e padrões definidos.',
+    stressTriggers: 'Falta de clareza, erros, ambiguidade, críticas ao trabalho detalhado',
+    motivationKeys: 'Qualidade, precisão, reconhecimento por competência, ambiente organizado',
+    communicationStyle: 'Factual, detalhada, prefere comunicação escrita. Usa dados e evidências.'
   }
+}
+
+export const TYPE_TIPS = {
+  D: {
+    'Vendas': 'Use sua determinação para bater metas, mas desenvolva escuta ativa para entender melhor o cliente. O cliente que se sente ouvido compra mais.',
+    'Liderança': 'Seu natural comando é uma força, mas lembre de incluir a equipe nas decisões. Líderes que escutam antes de decidir geram mais engajamento.',
+    'Atendimento': 'Sua eficiência é valiosa, mas pratique mais empatia e paciência com o cliente. Respire fundo antes de responder com pressa.',
+    'Financeiro': 'Você pode acelerar processos, mas cuidado para não pular etapas de verificação importantes que protegem a empresa.',
+    'Marketing': 'Seu foco em resultados impulsiona campanhas, mas desenvolva sensibilidade para mensagens criativas que conectam emocionalmente.',
+    'Operações': 'Sua ação rápida resolve problemas, mas desenvolva melhor planejamento de longo prazo para evitar firefighting constante.',
+    'RH': 'Sua liderança inspira, mas desenvolva sensibilidade para lidar com pessoas mais vulneráveis. Nem todo mundo responde bem a pressão.',
+    'TI': 'Você resolve crises rápido, mas desenvolva paciência para detalhes técnicos que previnem problemas futuros.',
+    'Produção': 'Sua energia move a produção, mas cuidado para não pressionar demais a equipe e gerar rotatividade.',
+    'Administração': 'Sua capacidade decisiva é valiosa, mas desenvolva mais atenção a processos e regulamentos que protegem a organização.',
+    'Ensino': 'Você domina a sala, mas desenvolva mais escuta e paciência com ritmos diferentes de aprendizagem.',
+    'Criativo': 'Sua visão direciona projetos, mas desenvolva abertura para ideias divergentes que enriquecem o resultado.'
+  },
+  I: {
+    'Vendas': 'Seu carisma natural é perfeito para vendas. Desenvolva suivi organizado para não perder oportunidades que surgem pela desorganização.',
+    'Liderança': 'Você inspira a equipe, mas desenvolva firmeza nas decisões difíceis. Nem tudo pode ser resolvido com bom humor.',
+    'Atendimento': 'Sua comunicação é um ativo, mas cuidado para não prometer mais do que pode entregar. O cliente lembra das promessas.',
+    'Financeiro': 'Sua rede de contatos ajuda, mas desenvolva mais rigor com números e detalhes. Verificação dupla é seu amiga.',
+    'Marketing': 'Perfeito! Sua criatividade e comunicação brilham aqui. Mantenha o foco em resultados mensuráveis além da criatividade.',
+    'Operações': 'Sua energia social é boa, mas desenvolva mais atenção a processos e cronogramas. Detalhes importam.',
+    'RH': 'Seu talento com pessoas é ideal aqui. Desenvolva estrutura para não deixar tarefas caírem pelas frestas.',
+    'TI': 'Sua comunicação ajuda na ponte com usuários, mas desenvolva mais foco em detalhes técnicos que garantem qualidade.',
+    'Produção': 'Você anima a equipe, mas desenvolva mais consistência e rotina no dia a dia. A produção precisa de regularidade.',
+    'Administração': 'Sua rede de contatos é valiosa, mas desenvolva mais organização documental. Papéis em dia evitam problemas.',
+    'Ensino': 'Perfeito! Sua comunicação engaja alunos. Desenvolva mais estrutura nas avaliações para ser justo com todos.',
+    'Criativo': 'Sua energia e visão brilham aqui. Desenvolva mais disciplina para finalizar projetos, não apenas começar.'
+  },
+  S: {
+    'Vendas': 'Sua confiabilidade constrói relacionamentos longos, mas desenvolva mais assertividade no fechamento. Clientes respeitam quem pede a venda.',
+    'Liderança': 'Você é um líder servidor, mas desenvolva mais firmeza nas decisões difíceis. A equipe precisa de direção clara.',
+    'Atendimento': 'Perfeito! Sua paciência e empatia são ideais para atendimento. Cuidado para não se sobrecarregar absorvendo problemas dos outros.',
+    'Financeiro': 'Sua consistência é valiosa, mas desenvolva mais proatividade na análise. Antecipe problemas em vez de apenas reagir.',
+    'Marketing': 'Sua escuta é um ativo, mas desenvolva mais ousadia nas campanhas. O mercado recompensa quem ousa.',
+    'Operações': 'Perfeito! Sua constância e confiabilidade são ideais para operações. Mantenha e continue evoluindo processos.',
+    'RH': 'Perfeito! Sua empatia e paciência são ideais para RH. Cuide para não se sobrecarregar emocionalmente com os problemas dos outros.',
+    'TI': 'Sua paciência é boa para debug, mas desenvolva mais proatividade na solução. Antecipe problemas em vez de esperar acontecer.',
+    'Produção': 'Perfeito! Sua constância e dedicação são ideais para produção. Mantenha o ritmo e cuide da sua saúde física.',
+    'Administração': 'Sua organização é valiosa, mas desenvolva mais iniciativa para propor melhorias. Sua visão de processo é única.',
+    'Ensino': 'Sua paciência é ideal, mas desenvolva mais dinamismo para engajar turmas grandes e manter a energia alta.',
+    'Criativo': 'Sua estabilidade é boa para edição, mas desenvolva mais abertura para experimentar. Inovação exige tentar o novo.'
+  },
+  C: {
+    'Vendas': 'Sua preparação é impecável, mas desenvolva mais espontaneidade e conexão emocional. Pessoas compram de pessoas, não de planilhas.',
+    'Liderança': 'Sua análise é valiosa, mas desenvolva mais velocidade nas decisões. Nem toda decisão precisa de todos os dados.',
+    'Atendimento': 'Sua precisão é valiosa, mas desenvolva mais empatia e flexibilidade. Protocolos importam, mas conexão humana importa mais.',
+    'Financeiro': 'Perfeito! Seu rigor e atenção aos detalhes são ideais para finanças. Continue mantendo os padrões altos.',
+    'Marketing': 'Sua análise de dados é valiosa, mas desenvolva mais criatividade e intuição. Dados mostram o que aconteceu; intuição mostra o que pode acontecer.',
+    'Operações': 'Sua organização é valiosa, mas desenvolva mais flexibilidade para imprevistos. Planos perfeitos foundam com a primeira surpresa.',
+    'RH': 'Sua justiça e imparcialidade são boas, mas desenvolva mais sensibilidade com pessoas. Nem tudo é lógico no mundo das emoções.',
+    'TI': 'Perfeito! Seu pensamento lógico e atenção aos detalhes são ideais para TI. Mantenha os padrões altos.',
+    'Produção': 'Seu controle de qualidade é valioso, mas desenvolva mais velocidade na execução. Perfeito é inimigo do feito.',
+    'Administração': 'Perfeito! Sua organização e método são ideais para administração. Mantenha a consistência.',
+    'Ensino': 'Sua precisão é valiosa, mas desenvolva mais dinâmica para engajar alunos. Variedade mantém a atenção.',
+    'Criativo': 'Sua atenção aos detalhes é valiosa, mas desenvolva mais ousadia e experimentação. Sem risco não há inovação.'
+  }
+}
 }
 
 export const TYPE_TIPS = {
@@ -320,6 +416,7 @@ export function calculateFit(employeePercentages, functionCategory) {
 
 export function generateAnalysis(employeePercentages, functionCategories) {
   const { dominant, secondary } = getDominantType(employeePercentages)
+  const typeInfo = TYPE_DESCRIPTIONS[dominant]
 
   const categoryFits = []
   if (functionCategories && functionCategories.length > 0) {
@@ -345,7 +442,7 @@ export function generateAnalysis(employeePercentages, functionCategories) {
   }))
 
   const improvementTips = currentFunctionName
-    ? (TYPE_TIPS[dominant]?.[currentFunctionName] || TYPE_TIPS[dominant]?.[Object.keys(FUNCTION_PROFILES)[0]] || 'Continue developedo suas competências.')
+    ? (TYPE_TIPS[dominant]?.[currentFunctionName] || 'Continue desenvolvendo suas competências.')
     : 'Selecione uma função para receber dicas específicas.'
 
   const strengthsInCurrentRole = currentFunctionName
@@ -362,7 +459,19 @@ export function generateAnalysis(employeePercentages, functionCategories) {
     recommendations: top3Recommendations,
     improvementTips,
     strengthsInCurrentRole,
-    challengesInCurrentRole
+    challengesInCurrentRole,
+    profileDetails: {
+      strengths: typeInfo.strengths,
+      weaknesses: typeInfo.weaknesses,
+      attentionPoints: typeInfo.attentionPoints,
+      howToManage: typeInfo.howToManage,
+      howToDodgeNegatives: typeInfo.howToDodgeNegatives,
+      idealEnvironment: typeInfo.idealEnvironment,
+      stressTriggers: typeInfo.stressTriggers,
+      motivationKeys: typeInfo.motivationKeys,
+      communicationStyle: typeInfo.communicationStyle,
+      secondaryType: TYPE_DESCRIPTIONS[secondary]?.name || ''
+    }
   }
 }
 

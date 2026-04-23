@@ -6,6 +6,46 @@ import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Responsi
 const DISC_COLORS = { D: '#EF4444', I: '#F59E0B', S: '#10B981', C: '#3B82F6' }
 const DISC_NAMES = { D: 'Dominante', I: 'Influente', S: 'Estável', C: 'Consciencioso' }
 
+function SectionCard({ title, icon, children, className = '' }) {
+  return (
+    <div className={`card ${className}`}>
+      <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        {icon && <span>{icon}</span>} {title}
+      </h2>
+      {children}
+    </div>
+  )
+}
+
+function Tag({ color, children }) {
+  const styles = {
+    D: 'bg-red-100 text-red-800 border-red-200',
+    I: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    S: 'bg-green-100 text-green-800 border-green-200',
+    C: 'bg-blue-100 text-blue-800 border-blue-200'
+  }
+  return <span className={`badge border ${styles[color] || 'bg-gray-100 text-gray-800'}`}>{children}</span>
+}
+
+function FitBadge({ pct }) {
+  if (pct >= 75) return <span className="badge bg-green-100 text-green-800">Boa adequação</span>
+  if (pct >= 50) return <span className="badge bg-yellow-100 text-yellow-800">Moderada</span>
+  return <span className="badge bg-red-100 text-red-800">Baixa</span>
+}
+
+function BulletList({ items, icon = '•', textColor = 'text-gray-700' }) {
+  return (
+    <ul className="space-y-1.5">
+      {items.map((item, i) => (
+        <li key={i} className={`text-sm ${textColor} flex gap-2`}>
+          <span className="flex-shrink-0">{icon}</span>
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export default function EmployeeDetailPage() {
   const { id } = useParams()
   const [employee, setEmployee] = useState(null)
@@ -30,22 +70,16 @@ export default function EmployeeDetailPage() {
   const result = employee.discResult
   const pcts = result?.percentages || { D: 0, I: 0, S: 0, C: 0 }
   const analysis = result?.analysis
+  const profile = analysis?.profileDetails
 
   const radarData = Object.entries(pcts).map(([key, value]) => ({
-    subject: key,
+    subject: `${key} — ${DISC_NAMES[key]}`,
     value,
     fullMark: 100
   }))
 
-  const recommendationData = analysis?.recommendations?.map(r => ({
-    name: r.functionName,
-    adequacao: r.fitPercentage,
-    fill: r.fitPercentage >= 70 ? '#10B981' : r.fitPercentage >= 50 ? '#F59E0B' : '#EF4444'
-  })) || []
-
   const fitColor = (pct) => pct >= 75 ? '#10B981' : pct >= 50 ? '#F59E0B' : '#EF4444'
   const fitBg = (pct) => pct >= 75 ? 'bg-green-50 border-green-200' : pct >= 50 ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'
-  const fitLabel = (pct) => pct >= 75 ? 'Boa adequação' : pct >= 50 ? 'Adequação moderada' : 'Baixa adequação'
 
   return (
     <div>
@@ -55,7 +89,7 @@ export default function EmployeeDetailPage() {
       </Link>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6 mt-2">
-        <div className="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center text-2xl font-bold text-primary">
+        <div className="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center text-2xl font-bold" style={{ color: result ? DISC_COLORS[result.dominantType] : '#6C3AED' }}>
           {result ? result.dominantType : '?'}
         </div>
         <div>
@@ -73,15 +107,15 @@ export default function EmployeeDetailPage() {
         </div>
       ) : (
         <div className="space-y-6">
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Perfil DISC</h2>
+            <SectionCard title="Perfil DISC" icon="🎯">
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={radarData}>
                     <PolarGrid />
-                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 14, fontWeight: 600 }} />
-                    <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 11 }} />
+                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12, fontWeight: 600 }} />
+                    <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} />
                     <Radar name="Perfil" dataKey="value" stroke="#6C3AED" fill="#6C3AED" fillOpacity={0.3} />
                   </RadarChart>
                 </ResponsiveContainer>
@@ -101,45 +135,82 @@ export default function EmployeeDetailPage() {
                   <span className="ml-3 text-sm text-gray-500">| Secundário: <span className="font-semibold">{result.secondaryType} — {DISC_NAMES[result.secondaryType]}</span></span>
                 )}
               </div>
-            </div>
+            </SectionCard>
 
             <div className="space-y-4">
               {analysis && (
-                <div className={`card border ${fitBg(analysis.currentFunctionFit)}`}>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Adequação na Função Atual</h2>
-                  <div className="flex items-center gap-4 mb-2">
+                <SectionCard title="Adequação na Função Atual" icon="📊" className={`border ${fitBg(analysis.currentFunctionFit)}`}>
+                  <div className="flex items-center gap-4 mb-3">
                     <div className="text-4xl font-bold" style={{ color: fitColor(analysis.currentFunctionFit) }}>
                       {analysis.currentFunctionFit}%
                     </div>
                     <div>
                       <div className="font-medium text-gray-700">{analysis.currentFunctionName}</div>
-                      <div className="text-sm text-gray-500">{fitLabel(analysis.currentFunctionFit)}</div>
+                      <FitBadge pct={analysis.currentFunctionFit} />
                     </div>
                   </div>
                   <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all" style={{ width: analysis.currentFunctionFit + '%', backgroundColor: fitColor(analysis.currentFunctionFit) }}></div>
                   </div>
-                  {analysis.strengthsInCurrentRole && (
-                    <div className="mt-3 text-sm"><span className="font-medium text-green-700">Pontos fortes:</span> {analysis.strengthsInCurrentRole}</div>
-                  )}
-                  {analysis.challengesInCurrentRole && (
-                    <div className="mt-1 text-sm"><span className="font-medium text-red-700">Desafios:</span> {analysis.challengesInCurrentRole}</div>
-                  )}
-                </div>
+                </SectionCard>
               )}
 
               {analysis?.improvementTips && (
-                <div className="card">
-                  <h3 className="font-semibold text-gray-900 mb-2">💡 Dicas de Melhoria</h3>
+                <SectionCard title="💡 Dicas de Melhoria" icon="">
                   <p className="text-sm text-gray-600 leading-relaxed">{analysis.improvementTips}</p>
-                </div>
+                </SectionCard>
               )}
             </div>
           </div>
 
+          {profile && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+              <SectionCard title="✅ Pontos Fortes" icon="">
+                <BulletList items={profile.strengths} icon="✓" textColor="text-green-700" />
+              </SectionCard>
+
+              <SectionCard title="⚠️ Pontos de Atenção" icon="">
+                <BulletList items={profile.attentionPoints} icon="⚠" textColor="text-yellow-700" />
+              </SectionCard>
+
+              <SectionCard title="🚫 Pontos Negativos" icon="">
+                <BulletList items={profile.weaknesses} icon="✗" textColor="text-red-700" />
+              </SectionCard>
+
+              <SectionCard title="🛡️ Como Lidar com os Negativos" icon="">
+                <BulletList items={profile.howToDodgeNegatives} icon="→" textColor="text-primary" />
+              </SectionCard>
+
+              <SectionCard title="👥 Como Gerenciar Este Perfil" icon="">
+                <BulletList items={profile.howToManage} icon="▸" textColor="text-gray-700" />
+              </SectionCard>
+
+              <SectionCard title="🎯 Fatores-Chave" icon="">
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-xs font-semibold text-gray-500 mb-1">AMBIENTE IDEAL</div>
+                    <p className="text-sm text-gray-700">{profile.idealEnvironment}</p>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-gray-500 mb-1">GATILHOS DE ESTRESSE</div>
+                    <p className="text-sm text-gray-700">{profile.stressTriggers}</p>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-gray-500 mb-1">O QUE MOTIVA</div>
+                    <p className="text-sm text-gray-700">{profile.motivationKeys}</p>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-gray-500 mb-1">ESTILO DE COMUNICAÇÃO</div>
+                    <p className="text-sm text-gray-700">{profile.communicationStyle}</p>
+                  </div>
+                </div>
+              </SectionCard>
+            </div>
+          )}
+
           {analysis?.recommendations && analysis.recommendations.length > 0 && (
-            <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">🏆 Top 3 Funções Recomendadas</h2>
+            <SectionCard title="🏆 Top 3 Funções Recomendadas" icon="">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {analysis.recommendations.map((rec, i) => (
                   <div key={i} className="border border-gray-200 rounded-xl p-4">
@@ -154,12 +225,11 @@ export default function EmployeeDetailPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </SectionCard>
           )}
 
           {employee.jobDescription && (
-            <div className="card">
-              <h3 className="font-semibold text-gray-900 mb-2">Descrição das Atividades</h3>
+            <SectionCard title="📝 Descrição das Atividades" icon="">
               <p className="text-sm text-gray-600 whitespace-pre-wrap">{employee.jobDescription}</p>
               {employee.dailyTasks && employee.dailyTasks.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -168,7 +238,7 @@ export default function EmployeeDetailPage() {
                   ))}
                 </div>
               )}
-            </div>
+            </SectionCard>
           )}
         </div>
       )}
