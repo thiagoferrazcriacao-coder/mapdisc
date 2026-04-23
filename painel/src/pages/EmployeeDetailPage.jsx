@@ -148,6 +148,12 @@ export default function EmployeeDetailPage() {
                   <span className="ml-3 text-sm text-gray-500">| Secundário: <span className="font-semibold">{result.secondaryType} — {DISC_NAMES[result.secondaryType]}</span></span>
                 )}
               </div>
+              {profile?.secondaryInfluence && (
+                <div className="mt-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
+                  <p className="text-xs text-gray-500 font-semibold mb-1">INFLUÊNCIA DO PERFIL SECUNDÁRIO</p>
+                  <p className="text-sm text-gray-600">{profile.secondaryInfluence}</p>
+                </div>
+              )}
             </SectionCard>
 
             <div className="space-y-4">
