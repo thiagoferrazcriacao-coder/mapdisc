@@ -30,7 +30,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-dark via-primary to-primary-light px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="MapDISC" className="w-20 h-20 mx-auto mb-3" />
+          <img src="/logo.png" alt="MapDISC" className="w-96 h-96 mx-auto mb-3" />
           <h1 className="text-3xl font-bold text-white">MapDISC</h1>
           <p className="text-white/80 mt-1">Perfil Comportamental DISC</p>
         </div>

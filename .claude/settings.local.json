@@ -1,0 +1,53 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx vercel *)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(node -e ' *)",
+      "Bash(atlas --version)",
+      "Bash(npx mongodb-atlas-cli *)",
+      "Read(//c/Users/cmart/.vercel/**)",
+      "Read(//c/Users/cmart/AppData/Roaming/com.vercel.cli/**)",
+      "Bash(curl -s -X POST 'https://api.vercel.com/v1/storage/kv?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu' -H 'Content-Type: application/json' -d '{\"name\":\"mapdisc-kv\",\"regions\":[\"iad1\"]}')",
+      "Bash(curl -s -X POST 'https://api.vercel.com/v1/storage/postgres?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu' -H 'Content-Type: application/json' -d '{\"name\":\"mapdisc-db\",\"regions\":[\"iad1\"]}')",
+      "Bash(curl -s 'https://api.vercel.com/v1/storage?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu')",
+      "Bash(curl -s 'https://api.vercel.com/v1/blob?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu')",
+      "Bash(curl -s 'https://api.vercel.com/v1/stores?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu')",
+      "Bash(curl -s 'https://api.vercel.com/v6/blob/stores?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu')",
+      "Bash(curl -s -X POST 'https://api.vercel.com/v6/blob/stores?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu' -H 'Content-Type: application/json' -d '{\"name\":\"mapdisc-blob\"}')",
+      "Bash(curl -s -X POST https://api.upstash.com/v2/redis/database -H 'Content-Type: application/json' -d '{\"name\":\"mapdisc\",\"region\":\"us-east-1\",\"tls\":true}')",
+      "Bash(curl -s \"https://railway.app/api/v2\")",
+      "Bash(npx vercel@latest --version)",
+      "Bash(curl -s 'https://api.vercel.com/v1/blob/store/store_wsWbe75pdPq5Nk9q/tokens?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu')",
+      "Bash(curl -s 'https://api.vercel.com/v1/storage/stores/store_wsWbe75pdPq5Nk9q?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu')",
+      "Bash(curl -s 'https://api.vercel.com/v1/storage/stores?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu')",
+      "Bash(curl -s -X POST 'https://api.vercel.com/v1/storage/stores/store_wsWbe75pdPq5Nk9q/connections?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu' -H 'Content-Type: application/json' -d '{\"projectId\":\"prj_ckS8HE0X7GNzbFfeRB1N9y9LUDJQ\",\"environments\":[\"production\",\"preview\",\"development\"]}')",
+      "Bash(curl -s 'https://api.vercel.com/v1/storage/stores/store_wsWbe75pdPq5Nk9q/tokens?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu')",
+      "Bash(curl -s 'https://api.vercel.com/v1/storage/stores/store_wsWbe75pdPq5Nk9q/token?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu')",
+      "Bash(curl -s -X POST 'https://api.vercel.com/v1/storage/stores/store_wsWbe75pdPq5Nk9q/token?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu' -H 'Content-Type: application/json' -d '{\"projectId\":\"prj_ckS8HE0X7GNzbFfeRB1N9y9LUDJQ\"}')",
+      "Bash(curl -s 'https://api.vercel.com/v1/storage/stores/store_wsWbe75pdPq5Nk9q/connections?teamId=team_JwiAnQbjaowtPHJhJKjyidXt' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu')",
+      "Bash(curl -s 'https://api.vercel.com/v9/projects/prj_ckS8HE0X7GNzbFfeRB1N9y9LUDJQ/env?teamId=team_JwiAnQbjaowtPHJhJKjyidXt&decrypt=true' -H 'Authorization: Bearer vca_7s425nNbyXqqRrAvsYBB1ItWwZ05jDR0wPKpmlSTKXmkjEWTWD1i2ldu')",
+      "Bash(npm install *)",
+      "Bash(curl -s -X POST https://mapdisc.vercel.app/api/auth/register -H 'Content-Type: application/json' -d '{\"name\":\"Teste Empresa\",\"email\":\"teste@mapdisc.com\",\"password\":\"123456\"}')",
+      "Bash(curl -s -X POST \"https://mapdisc.vercel.app/api/auth/register\" -H \"Content-Type: application/json\" -d '{\"name\":\"Teste Empresa\",\"email\":\"teste2@mapdisc.com\",\"password\":\"123456\"}')",
+      "Bash(curl -s -X POST \"https://mapdisc.vercel.app/api/auth/login\" -H \"Content-Type: application/json\" -d '{\"email\":\"teste2@mapdisc.com\",\"password\":\"123456\"}')"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$json = $input | Out-String | ConvertFrom-Json; $f = $json.tool_input.file_path; if ($f -match 'painel.(src|public|teste).') { Set-Location 'C:\\Users\\cmart\\Desktop\\CLAUDE CODE\\MapDISC'; npx vercel --prod --yes 2>&1 | Select-Object -Last 5 }",
+            "shell": "powershell",
+            "timeout": 120,
+            "statusMessage": "Fazendo deploy no Vercel..."
+          }
+        ]
+      }
+    ]
+  }
+}

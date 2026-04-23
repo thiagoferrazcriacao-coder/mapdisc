@@ -32,10 +32,9 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-dark via-primary to-primary-light px-4 py-8">
       <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <img src="/logo.png" alt="MapDISC" className="w-20 h-20 mx-auto mb-3" />
-          <h1 className="text-3xl font-bold text-white">MapDISC</h1>
-          <p className="text-white/80 mt-1">Criar sua conta</p>
+        <div className="text-center mb-4">
+          <img src="/logo.png" alt="MapDISC" className="w-96 h-96 mx-auto mb-1" />
+          <p className="text-white/80">Criar sua conta</p>
         </div>
         <div className="card">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm">{error}</div>}

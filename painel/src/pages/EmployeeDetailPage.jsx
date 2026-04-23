@@ -89,8 +89,8 @@ export default function EmployeeDetailPage() {
       </Link>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6 mt-2">
-        <div className="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center overflow-hidden" style={{ color: result ? DISC_COLORS[result.dominantType] : '#6C3AED' }}>
-          {result ? <span className="text-2xl font-bold">{result.dominantType}</span> : <img src="/logo.png" alt="MapDISC" className="w-10 h-10" />}
+        <div className="w-96 h-96 rounded-full bg-primary-50 flex items-center justify-center overflow-hidden" style={{ color: result ? DISC_COLORS[result.dominantType] : '#6C3AED' }}>
+          {result ? <span className="text-2xl font-bold">{result.dominantType}</span> : <img src="/logo.png" alt="MapDISC" className="w-64 h-64" />}
         </div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{employee.name}</h1>

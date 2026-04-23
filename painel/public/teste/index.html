@@ -72,7 +72,7 @@ textarea.input{resize:vertical;min-height:80px}
 <div style="margin-bottom:16px"><img src="logo.png" alt="MapDISC" style="width:80px;height:80px;margin:0 auto;display:block"></div>
 <div class="welcome-logo">MapDISC</div>
 <div class="welcome-sub">Descubra seu perfil comportamental<br>e encontre a função ideal para você</div>
-<button class="welcome-btn" onclick="goToScreen('personal')">Iniciar Avaliação</button>
+<button class="welcome-btn" onclick="goToScreen('personal')">COMEÇAR</button>
 </div>
 
 <div id="personal" class="screen">
@@ -290,8 +290,8 @@ function renderQuestion() {
   document.getElementById('progressFill').style.width = pct + '%'
   document.getElementById('nextBtn').disabled = true
   const area = document.getElementById('questionArea')
-  area.innerHTML = q.statements.map(s => 
-    '<div class="statement-card" data-factor="' + s.factor + '" onclick="selectStatement(this)">' +
+  area.innerHTML = q.statements.map(s =>
+    '<div class="statement-card" data-factor="' + s.letter + '" onclick="selectStatement(this)">' +
     '<span>' + s.text + '</span>' +
     '<span class="badge" style="display:none"></span>' +
     '</div>'
