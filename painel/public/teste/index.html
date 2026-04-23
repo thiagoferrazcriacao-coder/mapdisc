@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#6C3AED">
+<title>MapDISC — Perfil Comportamental</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;background:#F9FAFB;color:#1F2937;min-height:100vh;font-size:16px;-webkit-font-smoothing:antialiased}
+.screen{display:none;min-height:100vh;padding:24px 20px;animation:fadeIn .3s ease}
+.screen.active{display:flex;flex-direction:column;align-items:center}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.btn-primary{background:#6C3AED;color:#fff;border:none;border-radius:12px;padding:14px 32px;font-size:16px;font-weight:600;cursor:pointer;width:100%;max-width:400px;transition:all .2s;touch-action:manipulation}
+.btn-primary:hover{background:#5B21B6}
+.btn-primary:disabled{background:#A78BFA;cursor:not-allowed}
+.input{width:100%;max-width:400px;border:1.5px solid #D1D5DB;border-radius:10px;padding:12px 14px;font-size:16px;background:#fff;transition:border .2s;-webkit-appearance:none}
+.input:focus{outline:none;border-color:#6C3AED;box-shadow:0 0 0 3px rgba(108,58,237,.15)}
+.label{display:block;font-size:13px;font-weight:600;color:#6B7280;margin-bottom:6px;max-width:400px;width:100%}
+.card{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);padding:20px;width:100%;max-width:400px}
+.progress-bar{width:100%;max-width:400px;height:6px;background:#E5E7EB;border-radius:3px;margin:16px 0;overflow:hidden}
+.progress-fill{height:100%;background:#6C3AED;border-radius:3px;transition:width .3s ease}
+.category-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:400px}
+.category-btn{padding:12px 8px;border:2px solid #E5E7EB;border-radius:10px;background:#fff;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center;touch-action:manipulation}
+.category-btn.selected{border-color:#6C3AED;background:#F3F0FF;color:#6C3AED;font-weight:600}
+.statement-card{background:#fff;border:2px solid #E5E7EB;border-radius:12px;padding:16px;margin-bottom:10px;cursor:pointer;transition:all .15s;touch-action:manipulation;font-size:15px;line-height:1.5;min-height:56px;display:flex;align-items:center}
+.statement-card:hover{border-color:#A78BFA}
+.statement-card.most{border-color:#10B981;background:#ECFDF5;color:#065F46;box-shadow:0 0 0 2px rgba(16,185,129,.2)}
+.statement-card.least{border-color:#EF4444;background:#FEF2F2;color:#991B1B;box-shadow:0 0 0 2px rgba(239,68,68,.2)}
+.statement-card .badge{margin-left:auto;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;flex-shrink:0}
+.statement-card.most .badge{background:#10B981;color:#fff}
+.statement-card.least .badge{background:#EF4444;color:#fff}
+.loading-spinner{width:48px;height:48px;border:4px solid #E5E7EB;border-top-color:#6C3AED;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-wheel{position:relative;width:200px;height:200px;margin:24px auto}
+.result-wheel svg{width:100%;height:100%;transform:rotate(-90deg)}
+.result-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.result-center .dominant{font-size:36px;font-weight:800;color:#6C3AED;line-height:1}
+.result-center .label{font-size:12px;color:#6B7280;margin-top:2px}
+.fit-bar{width:100%;max-width:400px;height:10px;background:#E5E7EB;border-radius:5px;overflow:hidden;margin:8px 0 4px}
+.fit-fill{height:100%;border-radius:5px;transition:width .5s ease}
+.rec-card{background:#fff;border:1.5px solid #E5E7EB;border-radius:12px;padding:14px;margin-bottom:8px;width:100%;max-width:400px}
+.rec-card .fit-pct{font-size:24px;font-weight:700}
+.text-sm{font-size:13px;color:#6B7280}
+.text-center{text-align:center}
+.mt-2{margin-top:8px}
+.mt-4{margin-top:16px}
+.mt-6{margin-top:24px}
+.mb-2{margin-bottom:8px}
+.mb-4{margin-bottom:16px}
+.gap-2{gap:8px}
+.w-full{width:100%}
+.font-bold{font-weight:700}
+.text-lg{font-size:18px}
+.text-xl{font-size:22px}
+.text-violet{color:#6C3AED}
+.text-red{color:#EF4444}
+.text-green{color:#10B981}
+.bg-violet{background:#6C3AED}
+.welcome-bg{background:linear-gradient(135deg,#6C3AED 0%,#8B5CF6 50%,#A78BFA 100%);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:100vh}
+.welcome-logo{font-size:36px;font-weight:800;margin-bottom:8px}
+.welcome-sub{font-size:16px;opacity:.9;margin-bottom:32px;line-height:1.5}
+.welcome-btn{background:#fff;color:#6C3AED;border:none;border-radius:12px;padding:14px 40px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation}
+textarea.input{resize:vertical;min-height:80px}
+</style>
+</head>
+<body>
+<div id="welcome" class="screen welcome-bg active">
+<div style="font-size:64px;margin-bottom:16px">🧭</div>
+<div class="welcome-logo">MapDISC</div>
+<div class="welcome-sub">Descubra seu perfil comportamental<br>e encontre a função ideal para você</div>
+<button class="welcome-btn" onclick="goToScreen('personal')">Iniciar Avaliação</button>
+</div>
+
+<div id="personal" class="screen">
+<div class="card">
+<h2 style="font-size:20px;font-weight:700;margin-bottom:20px;text-align:center">Seus Dados</h2>
+<div class="mb-4">
+<label class="label">Nome completo *</label>
+<input class="input" id="name" type="text" placeholder="Seu nome completo" autocomplete="name">
+</div>
+<div class="mb-4">
+<label class="label">Email *</label>
+<input class="input" id="email" type="email" placeholder="seu@email.com" autocomplete="email">
+</div>
+<div class="mb-4">
+<label class="label">Telefone</label>
+<input class="input" id="phone" type="tel" placeholder="(00) 00000-0000" autocomplete="tel">
+</div>
+<div class="mb-4">
+<label class="label">Departamento / Setor</label>
+<input class="input" id="department" type="text" placeholder="Ex: Comercial, TI, RH...">
+</div>
+<button class="btn-primary mt-4" onclick="validatePersonal()">Continuar</button>
+</div>
+</div>
+
+<div id="functions" class="screen">
+<h2 style="font-size:20px;font-weight:700;margin-bottom:4px;text-align:center">O que você faz?</h2>
+<p class="text-sm text-center mb-4" style="max-width:400px">Selecione as categorias que melhor descrevem suas atividades</p>
+<div class="category-grid" id="categoryGrid"></div>
+<div class="mt-4" style="width:100%;max-width:400px">
+<label class="label">Cargo / Função</label>
+<input class="input mb-4" id="jobTitle" type="text" placeholder="Ex: Vendedor, Analista de TI...">
+</div>
+<div style="width:100%;max-width:400px">
+<label class="label">Descreva suas atividades diárias</label>
+<textarea class="input" id="jobDescription" placeholder="Conte o que você faz no dia a dia..." rows="3"></textarea>
+</div>
+<button class="btn-primary mt-4" onclick="validateFunctions()">Continuar para o Teste</button>
+</div>
+
+<div id="test" class="screen">
+<div style="width:100%;max-width:400px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+<span class="text-sm font-bold" id="progressText">1 / 24</span>
+<span class="text-sm" id="progressPct">4%</span>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:4%"></div></div>
+<p class="text-sm text-center mt-2 mb-4" style="color:#6B7280">Em cada grupo, toque uma vez para <span style="color:#10B981;font-weight:600">Mais como eu</span> e outra para <span style="color:#EF4444;font-weight:600">Menos como eu</span></p>
+<div id="questionArea"></div>
+<button class="btn-primary mt-4" id="nextBtn" disabled onclick="nextQuestion()">Próximo</button>
+</div>
+</div>
+
+<div id="processing" class="screen" style="justify-content:center;align-items:center;text-align:center">
+<div class="loading-spinner"></div>
+<p class="mt-4" style="font-size:18px;font-weight:600;color:#6C3AED">Analisando seu perfil...</p>
+<p class="text-sm mt-2" style="color:#6B7280">Aguarde um momento</p>
+</div>
+
+<div id="result" class="screen">
+<div class="card" style="text-align:center">
+<h2 style="font-size:22px;font-weight:700;margin-bottom:8px">Seu Perfil DISC</h2>
+<div class="result-wheel" id="resultWheel"></div>
+<div id="resultDominant" class="text-xl font-bold text-violet"></div>
+<div id="resultDescription" class="text-sm mt-2 mb-4" style="color:#6B7280;line-height:1.6"></div>
+<div id="resultRecommendations" style="text-align:left;width:100%"></div>
+<div class="mt-4" style="font-size:13px;color:#9CA3AF">Seu resultado completo foi enviado para a empresa</div>
+<button class="btn-primary mt-4" onclick="goToScreen('welcome');resetAll()">Entendi</button>
+</div>
+</div>
+
+<script>
+const CATEGORIES = ['Vendas','Liderança','Atendimento','Financeiro','Marketing','Operações','RH','TI','Produção','Administração','Ensino','Criativo']
+const CATEGORY_ICONS = {'Vendas':'💰','Liderança':'👑','Atendimento':'🎧','Financeiro':'📊','Marketing':'📣','Operações':'🚚','RH':'🤝','TI':'💻','Produção':'🏭','Administração':'📋','Ensino':'📚','Criativo':'🎨'}
+const DISC_COLORS = {D:'#EF4444',I:'#F59E0B',S:'#10B981',C:'#3B82F6'}
+const DISC_NAMES = {D:'Dominante',I:'Influente',S:'Estável',C:'Consciencioso'}
+
+const CHOICE_MAP = {A:'D',B:'I',C:'S',D:'C'}
+
+const QUESTIONS = [
+{group:1,statements:[{letter:'A',text:'Eu tomo decisões rapidamente e assumo o controle da situação'},{letter:'B',text:'Eu gosto de motivar e influenciar as pessoas ao meu redor'},{letter:'C',text:'Eu sou paciente e perseverante, prefiro trabalhar com constância'},{letter:'D',text:'Eu verifico todos os detalhes e sigo procedimentos com precisão'}]},
+{group:2,statements:[{letter:'A',text:'Eu enfrento desafios de frente e não recuo facilmente'},{letter:'B',text:'Eu me comunico com facilidade e faço amizades rapidamente'},{letter:'C',text:'Eu sou leal e valorizo relações estáveis e duradouras'},{letter:'D',text:'Eu organizo informações de forma lógica e sistemática'}]},
+{group:3,statements:[{letter:'A',text:'Eu sou direto e vou ao ponto sem rodeios'},{letter:'B',text:'Eu trago energia positiva e entusiasmo para qualquer ambiente'},{letter:'C',text:'Eu prefiro ambientes previsíveis e rotinas tranquilas'},{letter:'D',text:'Eu valorizo qualidade e perfeição em tudo que faço'}]},
+{group:4,statements:[{letter:'A',text:'Eu lidero naturalmente e as pessoas costumam me seguir'},{letter:'B',text:'Eu me expresso bem e gosto de falar em público'},{letter:'C',text:'Eu sou um bom ouvinte e ofereço apoio emocional aos outros'},{letter:'D',text:'Eu sigo regras e expectativas com comprometimento total'}]},
+{group:5,statements:[{letter:'A',text:'Eu me sinto confortável tomando decisões sob pressão'},{letter:'B',text:'Eu gosto de celebrar conquistas e reconhecer o time'},{letter:'C',text:'Eu prefiro trabalhar em equipe do que sozinho'},{letter:'D',text:'Eu analiso dados e evidências antes de tomar qualquer decisão'}]},
+{group:6,statements:[{letter:'A',text:'Eu busco resultados e me importo com o objetivo final'},{letter:'B',text:'Eu sou carismático e consigo convencer pessoas facilmente'},{letter:'C',text:'Eu demonstro empatia e me preocupo com o bem-estar de todos'},{letter:'D',text:'Eu mantenho tudo documentado e organizado de forma impecável'}]},
+{group:7,statements:[{letter:'A',text:'Eu aceito riscos calculados para alcançar grandes objetivos'},{letter:'B',text:'Eu networko naturalmente e mantenho contato com muitas pessoas'},{letter:'C',text:'Eu sou confiável e as pessoas podem contar comigo sempre'},{letter:'D',text:'Eu priorizo a exatidão e não deixo nada pela metade'}]},
+{group:8,statements:[{letter:'A',text:'Eu defendo minhas opiniões com firmeza e convicção'},{letter:'B',text:'Eu adapto meu estilo de comunicação para cada audiência'},{letter:'C',text:'Eu espero pacientemente os resultados em vez de forçar o ritmo'},{letter:'D',text:'Eu crio processos e checklists para garantir consistência'}]},
+{group:9,statements:[{letter:'A',text:'Eu valorizo a eficiência acima de tudo e elimino desperdícios'},{letter:'B',text:'Eu gosto de ser o centro das atenções e animar o grupo'},{letter:'C',text:'Eu prefiro estabilidade e evito mudanças bruscas'},{letter:'D',text:'Eu me asseguro de que tudo está correto antes de entregar'}]},
+{group:10,statements:[{letter:'A',text:'Eu me aposso rapidamente de novos projetos e responsabilidades'},{letter:'B',text:'Eu encontro oportunidades de colaborar e criar conexões'},{letter:'C',text:'Eu executo tarefas com dedicação e sem reclamar'},{letter:'D',text:'Eu estabeleço padrões altos e exijo o melhor de mim e dos outros'}]},
+{group:11,statements:[{letter:'A',text:'Eu aceito confrontos quando necessário para resolver problemas'},{letter:'B',text:'Eu espontaneamente me envolvo em atividades sociais'},{letter:'C',text:'Eu construo confiança através de ações consistentes no tempo'},{letter:'D',text:'Eu me preparo minuciosamente para cada situação'}]},
+{group:12,statements:[{letter:'A',text:'Eu traço metas ambiciosas e trabalho duro para alcançá-las'},{letter:'B',text:'Eu gero ideias criativas e apresento soluções inovadoras'},{letter:'C',text:'Eu priorizo harmonia e evito conflitos desnecessários'},{letter:'D',text:'Eu mantenho registros detalhados de tudo que é importante'}]},
+{group:13,statements:[{letter:'A',text:'Eu competo para vencer e me destaco nos desafios'},{letter:'B',text:'Eu envolvo outros no processo e crio senso de equipe'},{letter:'C',text:'Eu cumpro promessas e honro compromissos sem hesitar'},{letter:'D',text:'Eu investigo a fundo para entender as causas dos problemas'}]},
+{group:14,statements:[{letter:'A',text:'Eu delego tarefas e espero execução imediata'},{letter:'B',text:'Eu chamo a atenção positivamente e elogio em público'},{letter:'C',text:'Eu ofereço suporte constante e meu apoio é inabalável'},{letter:'D',text:'Eu faço avaliações objetivas baseadas em fatos concretos'}]},
+{group:15,statements:[{letter:'A',text:'Eu me movo rapidamente e fico impaciente com lentidão'},{letter:'B',text:'Eu me expresso com gestos e emoções visíveis'},{letter:'C',text:'Eu sou tolerante e perdão erros com facilidade'},{letter:'D',text:'Eu questiono tudo que não parece lógico ou consistente'}]},
+{group:16,statements:[{letter:'A',text:'Eu determino direções e não gosto de ser contrariado'},{letter:'B',text:'Eu visualizo possibilidades fascinantes e contagio os outros'},{letter:'C',text:'Eu equilíbro as necessidades do grupo e busco consenso'},{letter:'D',text:'Eu critico ideias para encontrar falhas e melhorá-las'}]},
+{group:17,statements:[{letter:'A',text:'Eu produzo resultados mesmo com recursos limitados'},{letter:'B',text:'Eu simplificjo o complexo e comunico de forma envolvente'},{letter:'C',text:'Eu me sintonizo com as necessidades dos outros e ajo com gentileza'},{letter:'D',text:'Eu considero riscos apenas quando os dados suportam a decisão'}]},
+{group:18,statements:[{letter:'A',text:'Eu assumo decisões difíceis que outros evitam'},{letter:'B',text:'Eu transformo ideias abstratas em narrativas cativantes'},{letter:'C',text:'Eu medianjo conflitos e busco soluções onde todos ganham'},{letter:'D',text:'Eu estudo padrões e tendências para prever resultados'}]},
+{group:19,statements:[{letter:'A',text:'Eu não temo confronto e defendo meus pontos com firmeza'},{letter:'B',text:'Eu me conecto emocionalmente e crio laços fortes rapidamente'},{letter:'C',text:'Eu mantenho a calma em situações de crise e estabilidade'},{letter:'D',text:'Eu reviso cuidadosamente antes de aprovar qualquer entrega'}]},
+{group:20,statements:[{letter:'A',text:'Eu priorizo ação sobre reflexão e decido rápido'},{letter:'B',text:'Eu me destaco socialmente e gosto de eventos e encontros'},{letter:'C',text:'Eu valorizo tradições e mantenho o que já funciona'},{letter:'D',text:'Eu padronizo processos para eliminar variabilidade'}]},
+{group:21,statements:[{letter:'A',text:'Eu cobro resultados das pessoas e espero alta performance'},{letter:'B',text:'Eu energizjo equipes desmotivadas com meu otimismo'},{letter:'C',text:'Eu ofereço ajuda antes mesmo de ser solicitado'},{letter:'D',text:'Eu identifico inconsistências que outros não percebem'}]},
+{group:22,statements:[{letter:'A',text:'Eu desafio o status quo e proponho mudanças ousadas'},{letter:'B',text:'Eu conto histórias que inspiram e engajam as pessoas'},{letter:'C',text:'Eu espero o momento certo e não forço situações'},{letter:'D',text:'Eu classifico e categorizo informações para facilitar decisões'}]},
+{group:23,statements:[{letter:'A',text:'Eu mantenho o foco no objetivo mesmo com distrações'},{letter:'B',text:'Eu descubro talentos nas pessoas e os incentivo a brilhar'},{letter:'C',text:'Eu mantenho relações de longo prazo e valorizo fidelidade'},{letter:'D',text:'Eu aplico metodologias testadas e validadas no trabalho'}]},
+{group:24,statements:[{letter:'A',text:'Eu assumo responsabilidade total e não fujo de obrigações'},{letter:'B',text:'Eu inspirajo a todos e deixo marca positiva por onde passo'},{letter:'C',text:'Eu crijo ambientes seguros e acolhedores para a equipe'},{letter:'D',text:'Eu garanto que regulamentos e normas sejam cumpridos à risca'}]}
+]
+
+let invitationToken = null
+let invitationData = null
+let currentQuestion = 0
+let responses = []
+let selectedMost = null
+let selectedLeast = null
+let selectedCategories = []
+let employeeData = {}
+
+const API_BASE = window.location.origin + '/api'
+
+async function init() {
+  const params = new URLSearchParams(window.location.search)
+  invitationToken = params.get('token')
+  if (invitationToken) {
+    try {
+      const res = await fetch(API_BASE + '/invitations/public/' + invitationToken)
+      if (res.ok) {
+        invitationData = await res.json()
+        if (invitationData.employeeEmail) {
+          document.getElementById('email').value = invitationData.employeeEmail
+        }
+        if (invitationData.employeeName) {
+          document.getElementById('name').value = invitationData.employeeName
+        }
+      }
+    } catch(e) {
+      console.log('Convite não validado, continuando...')
+    }
+  }
+  renderCategories()
+}
+
+function goToScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+}
+
+function validatePersonal() {
+  const name = document.getElementById('name').value.trim()
+  const email = document.getElementById('email').value.trim()
+  if (!name) return alert('Informe seu nome completo')
+  if (!email) return alert('Informe seu email')
+  employeeData.name = name
+  employeeData.email = email
+  employeeData.phone = document.getElementById('phone').value.trim()
+  employeeData.department = document.getElementById('department').value.trim()
+  goToScreen('functions')
+}
+
+function renderCategories() {
+  const grid = document.getElementById('categoryGrid')
+  grid.innerHTML = CATEGORIES.map(cat => 
+    '<button class="category-btn" data-cat="' + cat + '" onclick="toggleCategory(this)">' + (CATEGORY_ICONS[cat]||'') + ' ' + cat + '</button>'
+  ).join('')
+}
+
+function toggleCategory(btn) {
+  const cat = btn.dataset.cat
+  if (selectedCategories.includes(cat)) {
+    selectedCategories = selectedCategories.filter(c => c !== cat)
+    btn.classList.remove('selected')
+  } else {
+    selectedCategories.push(cat)
+    btn.classList.add('selected')
+  }
+}
+
+function validateFunctions() {
+  if (selectedCategories.length === 0) return alert('Selecione ao menos uma categoria')
+  employeeData.jobTitle = document.getElementById('jobTitle').value.trim()
+  employeeData.jobDescription = document.getElementById('jobDescription').value.trim()
+  employeeData.functionCategories = [...selectedCategories]
+  currentQuestion = 0
+  responses = []
+  renderQuestion()
+  goToScreen('test')
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[currentQuestion]
+  selectedMost = null
+  selectedLeast = null
+  const pct = Math.round(((currentQuestion + 1) / 24) * 100)
+  document.getElementById('progressText').textContent = (currentQuestion + 1) + ' / 24'
+  document.getElementById('progressPct').textContent = pct + '%'
+  document.getElementById('progressFill').style.width = pct + '%'
+  document.getElementById('nextBtn').disabled = true
+  const area = document.getElementById('questionArea')
+  area.innerHTML = q.statements.map(s => 
+    '<div class="statement-card" data-letter="' + s.letter + '" onclick="selectStatement(this)">' +
+    '<span>' + s.text + '</span>' +
+    '<span class="badge" style="display:none"></span>' +
+    '</div>'
+  ).join('')
+}
+
+function selectStatement(card) {
+  const letter = card.dataset.letter
+  if (selectedMost === letter) {
+    selectedMost = null
+    card.classList.remove('most')
+    card.querySelector('.badge').style.display = 'none'
+  } else if (selectedLeast === letter) {
+    selectedLeast = null
+    card.classList.remove('least')
+    card.querySelector('.badge').style.display = 'none'
+  } else if (!selectedMost) {
+    if (selectedLeast === letter) return
+    selectedMost = letter
+    card.classList.add('most')
+    card.querySelector('.badge').textContent = '✓ Mais'
+    card.querySelector('.badge').style.display = 'inline'
+  } else if (!selectedLeast) {
+    if (selectedMost === letter) return
+    selectedLeast = letter
+    card.classList.add('least')
+    card.querySelector('.badge').textContent = '✗ Menos'
+    card.querySelector('.badge').style.display = 'inline'
+  } else {
+    return
+  }
+  document.getElementById('nextBtn').disabled = !(selectedMost && selectedLeast)
+}
+
+function nextQuestion() {
+  if (!selectedMost || !selectedLeast) return
+  responses.push({ group: currentQuestion + 1, most: selectedMost, least: selectedLeast })
+  currentQuestion++
+  if (currentQuestion >= 24) {
+    submitTest()
+  } else {
+    renderQuestion()
+  }
+}
+
+async function submitTest() {
+  goToScreen('processing')
+  try {
+    const res = await fetch(API_BASE + '/disc/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        invitationToken: invitationToken,
+        employeeData: employeeData,
+        responses: responses
+      })
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Erro ao enviar respostas')
+    }
+    const data = await res.json()
+    showResult(data)
+  } catch(e) {
+    alert('Erro: ' + e.message)
+    goToScreen('test')
+    currentQuestion = 23
+    renderQuestion()
+  }
+}
+
+function showResult(data) {
+  goToScreen('result')
+  const pcts = data.percentages
+  const total = pcts.D + pcts.I + pcts.S + pcts.C
+  const Dp = (pcts.D / 180) * 180
+  const Ip = (pcts.I / 180) * 180
+  const Sp = (pcts.S / 180) * 180
+  const Cp = (pcts.C / 180) * 180
+
+  const desc = window.DISC_NAMES || DISC_NAMES
+  document.getElementById('resultDominant').textContent = data.dominantType + ' — ' + (desc[data.dominantType] || '')
+  document.getElementById('resultDescription').textContent = data.description || ''
+
+  let svgPath = ''
+  let startAngle = 0
+  const factors = [
+    {key:'D',pct:Dp,color:DISC_COLORS.D},
+    {key:'I',pct:Ip,color:DISC_COLORS.I},
+    {key:'S',pct:Sp,color:DISC_COLORS.S},
+    {key:'C',pct:Cp,color:DISC_COLORS.C}
+  ]
+  for (const f of factors) {
+    const angle = f.pct
+    const startRad = (startAngle - 90) * Math.PI / 180
+    const endRad = (startAngle + angle - 90) * Math.PI / 180
+    const x1 = 100 + 90 * Math.cos(startRad)
+    const y1 = 100 + 90 * Math.sin(startRad)
+    const x2 = 100 + 90 * Math.cos(endRad)
+    const y2 = 100 + 90 * Math.sin(endRad)
+    const largeArc = angle > 180 ? 1 : 0
+    svgPath += '<path d="M100,100 L' + x1 + ',' + y1 + ' A90,90 0 ' + largeArc + ',1 ' + x2 + ',' + y2 + ' Z" fill="' + f.color + '" opacity="0.8"/>'
+    const midAngle = (startAngle + angle / 2 - 90) * Math.PI / 180
+    const labelR = 65
+    const lx = 100 + labelR * Math.cos(midAngle)
+    const ly = 100 + labelR * Math.sin(midAngle)
+    svgPath += '<text x="' + lx + '" y="' + ly + '" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="700" fill="white">' + f.key + ' ' + pcts[f.key] + '%</text>'
+    startAngle += angle
+  }
+
+  document.getElementById('resultWheel').innerHTML = '<svg viewBox="0 0 200 200">' + svgPath + '</svg><div class="result-center"><div class="dominant">' + data.dominantType + '</div><div class="label">' + (desc[data.dominantType] || '') + '</div></div>'
+
+  let recsHtml = ''
+  if (data.analysis && data.analysis.recommendations) {
+    recsHtml = '<div class="mt-4"><p style="font-size:14px;font-weight:600;margin-bottom:8px">Funções com melhor adequação:</p>'
+    data.analysis.recommendations.forEach(r => {
+      const color = r.fitPercentage >= 75 ? '#10B981' : r.fitPercentage >= 50 ? '#F59E0B' : '#EF4444'
+      recsHtml += '<div class="rec-card"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:600">' + r.functionName + '</span><span class="fit-pct" style="color:' + color + '">' + r.fitPercentage + '%</span></div><div class="fit-bar"><div class="fit-fill" style="width:' + r.fitPercentage + '%;background:' + color + '"></div></div></div>'
+    })
+    recsHtml += '</div>'
+  }
+  document.getElementById('resultRecommendations').innerHTML = recsHtml
+}
+
+function resetAll() {
+  currentQuestion = 0
+  responses = []
+  selectedCategories = []
+  selectedMost = null
+  selectedLeast = null
+  employeeData = {}
+  document.getElementById('name').value = ''
+  document.getElementById('email').value = ''
+  document.getElementById('phone').value = ''
+  document.getElementById('department').value = ''
+  document.getElementById('jobTitle').value = ''
+  document.getElementById('jobDescription').value = ''
+  renderCategories()
+}
+
+init()
+</script>
+</body>
+</html>

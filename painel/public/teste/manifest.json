@@ -1,0 +1,10 @@
+{
+  "name": "MapDISC Teste",
+  "short_name": "MapDISC",
+  "description": "Teste de Perfil Comportamental DISC",
+  "start_url": "/teste/index.html",
+  "display": "standalone",
+  "background_color": "#F9FAFB",
+  "theme_color": "#6C3AED",
+  "icons": []
+}
