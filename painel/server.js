@@ -25,20 +25,23 @@ const memStore = {
 }
 
 let isConnected = false
+let connectionPromise = null
 
 async function connectDB() {
+  if (isConnected) return
+  if (connectionPromise) return connectionPromise
   if (!process.env.MONGODB_URI) {
     console.log('⚠ MONGODB_URI não configurado. Usando armazenamento em memória.')
     return
   }
-  if (isConnected) return
-  try {
-    await mongoose.connect(process.env.MONGODB_URI)
+  connectionPromise = mongoose.connect(process.env.MONGODB_URI).then(() => {
     isConnected = true
     console.log('✓ MongoDB conectado')
-  } catch (err) {
+  }).catch(err => {
     console.log('⚠ Erro ao conectar MongoDB. Usando armazenamento em memória.', err.message)
-  }
+    connectionPromise = null
+  })
+  await connectionPromise
 }
 
 connectDB()
@@ -46,6 +49,13 @@ connectDB()
 const app = express()
 app.use(cors())
 app.use(express.json({ limit: '10mb' }))
+
+app.use(async (req, res, next) => {
+  if (!isConnected && process.env.MONGODB_URI) {
+    await connectDB()
+  }
+  next()
+})
 
 app.use('/api/auth', createAuthRoutes(Company, memStore, isConnected))
 app.use('/api/employees', auth, createEmployeeRoutes(Employee, DISCResult, Invitation, memStore, isConnected))
@@ -129,7 +139,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Erro interno do servidor' })
 })
 
-if (process.env.NODE_ENV === 'production') {
+const IS_VERCEL = process.env.VERCEL === '1'
+
+if (!IS_VERCEL) {
   app.use(express.static(join(__dirname, 'dist')))
   app.get('*', (req, res) => {
     if (!req.path.startsWith('/api') && !req.path.startsWith('/teste')) {
@@ -140,8 +152,8 @@ if (process.env.NODE_ENV === 'production') {
 
 export default app
 
-const PORT = process.env.PORT || 3002
-if (process.env.NODE_ENV !== 'vercel') {
+if (!IS_VERCEL) {
+  const PORT = process.env.PORT || 3002
   app.listen(PORT, () => {
     console.log(`✓ MapDISC API rodando na porta ${PORT}`)
     if (!isConnected) console.log('⚠ Modo em memória ativo — dados não persistem')

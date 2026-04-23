@@ -2,7 +2,6 @@ import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import mongoose from 'mongoose'
-import jwt from 'jsonwebtoken'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
@@ -18,8 +17,6 @@ import createInvitationRoutes from './routes/invitations.js'
 import createDiscRoutes from './routes/disc.js'
 import createDashboardRoutes from './routes/dashboard.js'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'mapdisc-secret-change-me'
-
 const memStore = {
   companies: [],
   employees: [],
@@ -28,19 +25,23 @@ const memStore = {
 }
 
 let isConnected = false
+let connectionPromise = null
 
 async function connectDB() {
+  if (isConnected) return
+  if (connectionPromise) return connectionPromise
   if (!process.env.MONGODB_URI) {
     console.log('⚠ MONGODB_URI não configurado. Usando armazenamento em memória.')
     return
   }
-  try {
-    await mongoose.connect(process.env.MONGODB_URI)
+  connectionPromise = mongoose.connect(process.env.MONGODB_URI).then(() => {
     isConnected = true
     console.log('✓ MongoDB conectado')
-  } catch (err) {
+  }).catch(err => {
     console.log('⚠ Erro ao conectar MongoDB. Usando armazenamento em memória.', err.message)
-  }
+    connectionPromise = null
+  })
+  await connectionPromise
 }
 
 connectDB()
@@ -48,6 +49,13 @@ connectDB()
 const app = express()
 app.use(cors())
 app.use(express.json({ limit: '10mb' }))
+
+app.use(async (req, res, next) => {
+  if (!isConnected && process.env.MONGODB_URI) {
+    await connectDB()
+  }
+  next()
+})
 
 app.use('/api/auth', createAuthRoutes(Company, memStore, isConnected))
 app.use('/api/employees', auth, createEmployeeRoutes(Employee, DISCResult, Invitation, memStore, isConnected))
@@ -121,27 +129,33 @@ app.patch('/api/auth/password', auth, async (req, res) => {
   }
 })
 
-app.use('/teste', express.static(join(dirname(fileURLToPath(import.meta.url)), '..', 'teste')))
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+app.use('/teste', express.static(join(__dirname, 'public', 'teste')))
 
 app.use((err, req, res, next) => {
   console.error(err.stack)
   res.status(500).json({ error: 'Erro interno do servidor' })
 })
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+const IS_VERCEL = process.env.VERCEL === '1'
 
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(join(__dirname, '..', 'painel', 'dist')))
+if (!IS_VERCEL) {
+  app.use(express.static(join(__dirname, 'dist')))
   app.get('*', (req, res) => {
     if (!req.path.startsWith('/api') && !req.path.startsWith('/teste')) {
-      res.sendFile(join(__dirname, '..', 'painel', 'dist', 'index.html'))
+      res.sendFile(join(__dirname, 'dist', 'index.html'))
     }
   })
 }
 
-const PORT = process.env.PORT || 3002
-app.listen(PORT, () => {
-  console.log(`✓ MapDISC API rodando na porta ${PORT}`)
-  if (!isConnected) console.log('⚠ Modo em memória ativo — dados não persistem')
-})
+export default app
+
+if (!IS_VERCEL) {
+  const PORT = process.env.PORT || 3002
+  app.listen(PORT, () => {
+    console.log(`✓ MapDISC API rodando na porta ${PORT}`)
+    if (!isConnected) console.log('⚠ Modo em memória ativo — dados não persistem')
+  })
+}
