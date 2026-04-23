@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 
-export default function createInvitationRoutes(Invitation, Employee, memStore, isConnected) {
+export default function createInvitationRoutes(Invitation, Employee, memStore, isConnectedFn) {
   const router = Router()
 
   router.post('/', async (req, res) => {
@@ -9,7 +9,7 @@ export default function createInvitationRoutes(Invitation, Employee, memStore, i
       const companyId = req.companyId
       const { employeeName, employeeEmail } = req.body
       if (!employeeName) return res.status(400).json({ error: 'Nome do funcionário é obrigatório' })
-      if (isConnected) {
+      if (isConnectedFn()) {
         const invitation = new Invitation({ companyId, employeeName, employeeEmail: employeeEmail?.toLowerCase() })
         await invitation.save()
         return res.status(201).json({ ...invitation.toJSON(), id: invitation._id })
@@ -38,7 +38,7 @@ export default function createInvitationRoutes(Invitation, Employee, memStore, i
   router.get('/', async (req, res) => {
     try {
       const companyId = req.companyId
-      if (isConnected) {
+      if (isConnectedFn()) {
         const invitations = await Invitation.find({ companyId }).sort({ createdAt: -1 })
         return res.json(invitations.map(i => ({ ...i.toJSON(), id: i._id })))
       } else {
@@ -54,7 +54,7 @@ export default function createInvitationRoutes(Invitation, Employee, memStore, i
     try {
       const companyId = req.companyId
       const { id } = req.params
-      if (isConnected) {
+      if (isConnectedFn()) {
         const invitation = await Invitation.findOneAndDelete({ _id: id, companyId })
         if (!invitation) return res.status(404).json({ error: 'Convite não encontrado' })
         return res.json({ message: 'Convite cancelado' })
@@ -72,7 +72,7 @@ export default function createInvitationRoutes(Invitation, Employee, memStore, i
   router.get('/public/:token', async (req, res) => {
     try {
       const { token } = req.params
-      if (isConnected) {
+      if (isConnectedFn()) {
         const invitation = await Invitation.findOne({ token, used: false, expiresAt: { $gt: new Date() } })
         if (!invitation) return res.status(404).json({ error: 'Convite inválido ou expirado' })
         return res.json({ employeeName: invitation.employeeName, employeeEmail: invitation.employeeEmail, companyId: invitation.companyId })

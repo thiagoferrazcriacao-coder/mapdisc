@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mapdisc-secret-change-me'
 
-export default function createAuthRoutes(Company, memStore, isConnected) {
+export default function createAuthRoutes(Company, memStore, isConnectedFn) {
   const router = Router()
 
   router.post('/register', async (req, res) => {
@@ -13,7 +13,7 @@ export default function createAuthRoutes(Company, memStore, isConnected) {
       if (!name || !email || !password) {
         return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' })
       }
-      if (isConnected) {
+      if (isConnectedFn()) {
         const existing = await Company.findOne({ email: email.toLowerCase() })
         if (existing) return res.status(400).json({ error: 'Email já cadastrado' })
         const company = new Company({ name, email: email.toLowerCase(), phone, password, industry, teamSize })
@@ -41,7 +41,7 @@ export default function createAuthRoutes(Company, memStore, isConnected) {
     try {
       const { email, password } = req.body
       if (!email || !password) return res.status(400).json({ error: 'Email e senha são obrigatórios' })
-      if (isConnected) {
+      if (isConnectedFn()) {
         const company = await Company.findOne({ email: email.toLowerCase() })
         if (!company) return res.status(401).json({ error: 'Credenciais inválidas' })
         const valid = await company.comparePassword(password)

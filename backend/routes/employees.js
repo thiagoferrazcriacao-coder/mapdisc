@@ -1,12 +1,12 @@
 import { Router } from 'express'
 
-export default function createEmployeeRoutes(Employee, DISCResult, Invitation, memStore, isConnected) {
+export default function createEmployeeRoutes(Employee, DISCResult, Invitation, memStore, isConnectedFn) {
   const router = Router()
 
   router.get('/', async (req, res) => {
     try {
       const companyId = req.companyId
-      if (isConnected) {
+      if (isConnectedFn()) {
         const employees = await Employee.find({ companyId }).sort({ createdAt: -1 })
         const results = await DISCResult.find({ companyId })
         const resultMap = {}
@@ -37,7 +37,7 @@ export default function createEmployeeRoutes(Employee, DISCResult, Invitation, m
     try {
       const companyId = req.companyId
       const { id } = req.params
-      if (isConnected) {
+      if (isConnectedFn()) {
         const employee = await Employee.findOne({ _id: id, companyId })
         if (!employee) return res.status(404).json({ error: 'Funcionário não encontrado' })
         const discResult = await DISCResult.findOne({ employeeId: id })
@@ -59,7 +59,7 @@ export default function createEmployeeRoutes(Employee, DISCResult, Invitation, m
       const companyId = req.companyId
       const { name, email, phone, department, jobTitle, jobDescription, dailyTasks, functionCategories } = req.body
       if (!name) return res.status(400).json({ error: 'Nome é obrigatório' })
-      if (isConnected) {
+      if (isConnectedFn()) {
         const employee = new Employee({ companyId, name, email, phone, department, jobTitle, jobDescription, dailyTasks, functionCategories })
         await employee.save()
         return res.status(201).json({ ...employee.toJSON(), id: employee._id })
@@ -80,7 +80,7 @@ export default function createEmployeeRoutes(Employee, DISCResult, Invitation, m
       const companyId = req.companyId
       const { id } = req.params
       const updates = req.body
-      if (isConnected) {
+      if (isConnectedFn()) {
         const employee = await Employee.findOneAndUpdate({ _id: id, companyId }, updates, { new: true })
         if (!employee) return res.status(404).json({ error: 'Funcionário não encontrado' })
         return res.json({ ...employee.toJSON(), id: employee._id })
@@ -99,7 +99,7 @@ export default function createEmployeeRoutes(Employee, DISCResult, Invitation, m
     try {
       const companyId = req.companyId
       const { id } = req.params
-      if (isConnected) {
+      if (isConnectedFn()) {
         const employee = await Employee.findOneAndDelete({ _id: id, companyId })
         if (!employee) return res.status(404).json({ error: 'Funcionário não encontrado' })
         await DISCResult.deleteOne({ employeeId: id })

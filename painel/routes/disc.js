@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import { calculateDISCScores, calculatePercentages, getDominantType, generateAnalysis, TYPE_DESCRIPTIONS } from '../services/discAnalyzer.js'
 
-export default function createDiscRoutes(Employee, DISCResult, Invitation, Company, memStore, isConnected) {
+export default function createDiscRoutes(Employee, DISCResult, Invitation, Company, memStore, isConnectedFn) {
   const router = Router()
 
   router.post('/submit', async (req, res) => {
@@ -13,7 +13,7 @@ export default function createDiscRoutes(Employee, DISCResult, Invitation, Compa
       }
 
       let invitation
-      if (isConnected) {
+      if (isConnectedFn()) {
         invitation = await Invitation.findOne({ token: invitationToken, used: false, expiresAt: { $gt: new Date() } })
       } else {
         invitation = memStore.invitations.find(i => i.token === invitationToken && !i.used && new Date(i.expiresAt) > new Date())
@@ -29,7 +29,7 @@ export default function createDiscRoutes(Employee, DISCResult, Invitation, Compa
       const analysis = generateAnalysis(percentages, employeeData?.functionCategories || [])
 
       let employee
-      if (isConnected) {
+      if (isConnectedFn()) {
         employee = await Employee.findOne({ email: invitation.employeeEmail, companyId: invitation.companyId })
         if (!employee) {
           employee = new Employee({
@@ -90,7 +90,7 @@ export default function createDiscRoutes(Employee, DISCResult, Invitation, Compa
         completedAt: new Date().toISOString()
       }
 
-      if (isConnected) {
+      if (isConnectedFn()) {
         const existing = await DISCResult.findOneAndDelete({ employeeId: employee._id })
         const result = new DISCResult(discResult)
         await result.save()

@@ -57,11 +57,11 @@ app.use(async (req, res, next) => {
   next()
 })
 
-app.use('/api/auth', createAuthRoutes(Company, memStore, isConnected))
-app.use('/api/employees', auth, createEmployeeRoutes(Employee, DISCResult, Invitation, memStore, isConnected))
-app.use('/api/invitations', auth, createInvitationRoutes(Invitation, Employee, memStore, isConnected))
-app.use('/api/disc', createDiscRoutes(Employee, DISCResult, Invitation, Company, memStore, isConnected))
-app.use('/api/dashboard', auth, createDashboardRoutes(Employee, DISCResult, Invitation, memStore, isConnected))
+app.use('/api/auth', createAuthRoutes(Company, memStore, () => isConnected))
+app.use('/api/employees', auth, createEmployeeRoutes(Employee, DISCResult, Invitation, memStore, () => isConnected))
+app.use('/api/invitations', auth, createInvitationRoutes(Invitation, Employee, memStore, () => isConnected))
+app.use('/api/disc', createDiscRoutes(Employee, DISCResult, Invitation, Company, memStore, () => isConnected))
+app.use('/api/dashboard', auth, createDashboardRoutes(Employee, DISCResult, Invitation, memStore, () => isConnected))
 
 app.get('/api/auth/me', auth, async (req, res) => {
   try {

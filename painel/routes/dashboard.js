@@ -1,12 +1,12 @@
 import { Router } from 'express'
 
-export default function createDashboardRoutes(Employee, DISCResult, Invitation, memStore, isConnected) {
+export default function createDashboardRoutes(Employee, DISCResult, Invitation, memStore, isConnectedFn) {
   const router = Router()
 
   router.get('/stats', async (req, res) => {
     try {
       const companyId = req.companyId
-      if (isConnected) {
+      if (isConnectedFn()) {
         const totalEmployees = await Employee.countDocuments({ companyId })
         const completedTests = await DISCResult.countDocuments({ companyId })
         const invitations = await Invitation.find({ companyId })
