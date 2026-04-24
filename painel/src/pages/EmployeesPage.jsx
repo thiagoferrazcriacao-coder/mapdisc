@@ -69,7 +69,7 @@ export default function EmployeesPage() {
           {filtered.map(emp => (
             <Link to={`/employees/${emp.id}`} key={emp.id} className="card flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: emp.discResult ? (DISC_COLORS[emp.discResult.dominantType] + '20') : '#EEF4FF', border: emp.discResult ? `2px solid ${DISC_COLORS[emp.discResult.dominantType]}` : '2px solid #0057FF' }}>
+                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: emp.discResult ? (DISC_COLORS[emp.discResult.dominantType] + '20') : '#F5F0FF', border: emp.discResult ? `2px solid ${DISC_COLORS[emp.discResult.dominantType]}` : '2px solid #7C3AED' }}>
                   {emp.profilePhoto
                     ? <img src={emp.profilePhoto} alt={emp.name} className="w-full h-full object-cover" />
                     : emp.discResult
@@ -96,6 +96,21 @@ export default function EmployeesPage() {
                 ) : (
                   <span className="badge bg-gray-100 text-gray-600">Pendente</span>
                 )}
+                <button
+                  onClick={async (e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    if (!window.confirm(`Deseja remover ${emp.name}? Esta ação não pode ser desfeita.`)) return
+                    try {
+                      await api.deleteEmployee(emp.id)
+                      setEmployees(prev => prev.filter(x => x.id !== emp.id))
+                    } catch (err) { alert('Erro ao remover funcionário') }
+                  }}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0"
+                  title="Remover funcionário"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
               </div>
             </Link>
           ))}

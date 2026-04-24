@@ -163,176 +163,177 @@ function calculateFit(pcts, fn) {
   const p = sxy / den; return Math.max(0, Math.min(100, Math.round(((p + 1) / 2) * 100)))
 }
 
-function generateDetailedProfile(dominant, secondary, role, jobTitle, jobDescription) {
-  const ctx = jobTitle ? `como ${jobTitle}` : role ? `na função de ${role}` : 'em sua função'
-  const ctxDesc = jobDescription ? ` Considerando que você ${jobDescription.slice(0, 120).toLowerCase()}, ` : ''
+function generateDetailedProfile(dominant, secondary, role, jobTitle, jobDescription, employeeName) {
+  const n = employeeName || 'Este profissional'
+  const ctx = jobTitle ? `como ${jobTitle}` : role ? `na função de ${role}` : 'nesta função'
+  const ctxDesc = jobDescription ? ` Considerando que ${n} ${jobDescription.slice(0, 120).toLowerCase()}, ` : ''
 
   const PROFILES = {
     D: {
       strengths: [
-        `Tomada de decisão rápida e assertiva ${ctx} — você age antes que outros ainda estejam analisando`,
-        `Alta capacidade de execução e senso de urgência: entrega resultados mesmo sob pressão`,
+        `${n} tem tomada de decisão rápida e assertiva ${ctx} — age antes que outros ainda estejam analisando`,
+        `Alta capacidade de execução e senso de urgência: entrega resultados mesmo sob pressão intensa`,
         `Liderança natural que direciona a equipe para o objetivo sem se perder em detalhes`,
         `Coragem para enfrentar situações difíceis, negociações tensas e decisões impopulares`,
         `Foco inabalável em metas — não se distrai com tarefas que não geram resultado direto`
       ],
       attentionPoints: [
-        `${ctxDesc}há risco de impor um ritmo acelerado demais, gerando esgotamento na equipe`,
-        `A comunicação muito direta pode ser percebida como agressiva por perfis mais sensíveis (S e I)`,
-        `Tendência a decidir sem consultar quem tem informações técnicas importantes — cuidado com isso ${ctx}`,
+        `${ctxDesc}${n} pode impor um ritmo acelerado demais, gerando esgotamento na equipe ao redor`,
+        `A comunicação muito direta de ${n} pode ser percebida como agressiva por perfis mais sensíveis (S e I)`,
+        `Tendência a decidir sem consultar quem tem informações técnicas importantes — fique atento a isso ${ctx}`,
         `Pode subestimar processos e etapas necessárias que parecem "lentos" mas evitam retrabalho`
       ],
       weaknesses: [
-        `Impaciência com pessoas mais detalhistas ou com ritmo diferente do seu ${ctx}`,
+        `${n} demonstra impaciência com pessoas mais detalhistas ou com ritmo diferente ${ctx}`,
         `Dificuldade em ouvir críticas: interpreta feedback como ataque e pode reagir de forma defensiva`,
-        `Tendência a assumir controle de situações mesmo quando não é o responsável`,
+        `Tendência a assumir controle de situações mesmo quando não é o responsável — gera conflito`,
         `Negligência de aspectos emocionais e relacionais que impactam a coesão da equipe`
       ],
       howToDodgeNegatives: [
-        `Antes de decidir ${ctx}, estabeleça a regra de ouvir pelo menos 2 perspectivas diferentes por 3 minutos cada`,
-        `Quando sentir impaciência, faça uma pergunta em vez de dar uma ordem — isso reduz resistência`,
-        `Crie o hábito de perguntar "Qual o impacto nas pessoas?" antes de implementar qualquer mudança`,
-        `Reconheça publicamente o esforço dos outros, não só os resultados finais — isso multiplica engajamento`,
-        `Defina reuniões fixas de escuta ativa com a equipe — o controle começa pela informação`
+        `Ao dar feedback para ${n}, seja direto e com dados concretos — ele responde bem à honestidade e mal a rodeios`,
+        `Estabeleça como norma que decisões que afetam a equipe precisem de uma etapa de consulta antes de serem executadas`,
+        `Em reuniões com ${n}, defina pauta clara e tempo fixo — isso canaliza a energia dele de forma produtiva`,
+        `Reconheça publicamente os resultados de ${n}: isso mantém o engajamento sem necessidade de microgestão`,
+        `Quando perceber impaciência, ofereça um desafio maior — ${n} precisa de estímulo, não de freio`
       ],
       howToManage: [
-        `Dê autonomia real ${ctx} com metas claras — microgerenciar este perfil gera conflito e desmotivação`,
-        `Apresente desafios com métricas objetivas: ele precisa saber o que "vencer" significa`,
-        `Seja direto no feedback — este perfil valoriza honestidade mais do que diplomacia`,
-        `Ofereça projetos de liderança e protagonismo como forma de reconhecimento`,
-        `Evite reuniões longas sem pauta clara — prefira encontros curtos, objetivos e com decisões tomadas`
+        `Dê autonomia real a ${n} ${ctx} com metas claras — microgerenciar este perfil gera conflito e desmotivação`,
+        `Apresente desafios com métricas objetivas: ${n} precisa saber exatamente o que "vencer" significa`,
+        `Seja direto e objetivo no feedback — ${n} valoriza honestidade mais do que diplomacia`,
+        `Ofereça projetos de liderança e protagonismo como forma de reconhecimento e retenção`,
+        `Evite reuniões longas sem pauta e sem decisão — prefira encontros curtos, objetivos e conclusivos`
       ],
-      idealEnvironment: `Ambiente dinâmico com autonomia para decidir e executar ${ctx}. Prefere metas desafiadoras, liberdade de ação, competição saudável e reconhecimento por conquistas concretas. Funciona melhor sem excesso de burocracia.`,
-      stressTriggers: `Ambientes lentos, excesso de aprovações e reuniões sem decisão ${ctx} são os principais gatilhos. Perda de controle, falta de autoridade clara e tarefas repetitivas sem propósito também esgotam este perfil rapidamente.`,
-      motivationKeys: `Desafios novos, metas ambiciosas, autonomia para agir e a sensação clara de estar avançando e vencendo ${ctx}. Reconhecimento público por resultados é o combustível principal.`,
-      communicationStyle: `Direto, objetivo e orientado a resultados. Prefere respostas curtas, sem rodeios e com decisão clara ao final. ${jobTitle ? `Em contextos de ${jobTitle}, valoriza briefings rápidos e reuniões que terminam com ação definida.` : 'Evite apresentações longas sem conclusão prática.'}`
+      idealEnvironment: `${n} performa melhor em ambientes dinâmicos com autonomia para decidir e executar ${ctx}. Prefere metas desafiadoras, liberdade de ação, competição saudável e reconhecimento concreto por conquistas. Perde rendimento em ambientes com excesso de burocracia e aprovações.`,
+      stressTriggers: `Ambientes lentos, excesso de aprovações e reuniões sem decisão são os principais gatilhos de queda de performance para ${n} ${ctx}. Perda de controle, falta de autoridade clara e tarefas repetitivas sem propósito esgotam este perfil rapidamente.`,
+      motivationKeys: `${n} se motiva com desafios novos, metas ambiciosas, autonomia para agir e a sensação clara de estar avançando ${ctx}. Reconhecimento público por resultados tangíveis é o principal combustível deste perfil.`,
+      communicationStyle: `${n} tem comunicação direta, objetiva e orientada a resultados. Prefere respostas curtas, sem rodeios e com decisão clara ao final. ${jobTitle ? `Em ${jobTitle}, valoriza briefings rápidos e reuniões que terminam com ação definida.` : 'Evite apresentações longas sem conclusão prática ao se comunicar com este perfil.'}`
     },
     I: {
       strengths: [
-        `Comunicação envolvente e poder de influência positiva ${ctx} — conecta pessoas e cria engajamento`,
+        `${n} tem comunicação envolvente e poder de influência positiva ${ctx} — conecta pessoas e cria engajamento`,
         `Alta capacidade de persuasão: convence, entusiasma e mobiliza equipes em torno de ideias`,
-        `Criatividade para apresentar soluções novas e tornar processos mais dinâmicos`,
+        `Criatividade para apresentar soluções novas e tornar processos mais dinâmicos e atrativos`,
         `Facilidade para construir relacionamentos de confiança com clientes, colegas e lideranças`,
         `Energia e otimismo que contagiam o ambiente e mantêm o time motivado em momentos difíceis`
       ],
       attentionPoints: [
-        `${ctxDesc}há tendência a superestimar o que pode entregar — os compromissos assumidos precisam de acompanhamento`,
-        `A aversão a conflitos pode deixar problemas interpessoais sem resolução ${ctx}`,
+        `${ctxDesc}${n} tende a superestimar o que consegue entregar — os compromissos assumidos precisam de acompanhamento próximo`,
+        `A aversão a conflitos pode fazer com que ${n} deixe problemas interpessoais sem resolução ${ctx}`,
         `Dispersão em múltiplas ideias e projetos ao mesmo tempo pode comprometer o foco nas prioridades`,
         `Análises técnicas ou dados detalhados podem ser negligenciados em favor do que "parece certo"`
       ],
       weaknesses: [
-        `Dificuldade em manter organização e disciplina em processos repetitivos ${ctx}`,
+        `${n} tem dificuldade em manter organização e disciplina em processos repetitivos ${ctx}`,
         `Impulsividade: tende a agir pelo entusiasmo do momento antes de analisar completamente`,
-        `Dependência de aprovação e validação externa para manter a motivação`,
+        `Dependência de aprovação e validação externa para manter a motivação — oscila com a ausência de feedback`,
         `Dificuldade em sustentar o foco em tarefas técnicas, solitárias ou de longo prazo`
       ],
       howToDodgeNegatives: [
-        `Use listas de prioridade diária ${ctx} — limite a 3 tarefas essenciais e não abra nova sem fechar a anterior`,
-        `Antes de se comprometer, pergunte: "Tenho tempo, recurso e energia para isso agora?" — se não, adie`,
-        `Reserve 15 minutos de silêncio por dia para analisar dados antes de apresentar ideias`,
-        `Peça a alguém de confiança que revise seus compromissos semanalmente e te responsabilize`,
-        `Crie rituais de conclusão: só começa algo novo quando finaliza o que estava em andamento`
+        `Estabeleça com ${n} uma lista de prioridades semanais — limite a 3 entregas essenciais e acompanhe o fechamento`,
+        `Antes de ${n} assumir novos compromissos, pergunte junto: "Temos tempo e recurso para isso agora?" — esse filtro evita sobrepromessas`,
+        `Solicite que ${n} apresente dados e números junto às ideias — isso eleva a qualidade das propostas`,
+        `Crie rituais de fechamento: ${n} só deve abrir frentes novas após finalizar o que estava em andamento`,
+        `Use reconhecimento como ferramenta de direcionamento — elogie as entregas que ${n} concluiu com qualidade`
       ],
       howToManage: [
-        `Reconheça publicamente as conquistas ${ctx} — validação é o principal combustível deste perfil`,
+        `Reconheça publicamente as conquistas de ${n} ${ctx} — validação é o principal combustível deste perfil`,
         `Dê espaço para criatividade, mas estabeleça entregas com prazo e critério de qualidade claros`,
-        `Envolva-o em apresentações, vendas, treinamentos e interações que exijam influência`,
-        `Ofereça feedback com encorajamento antes de apontar pontos de melhoria`,
-        `Coloque este perfil como referência em projetos que envolvam comunicação, inovação e engajamento`
+        `Envolva ${n} em apresentações, vendas, treinamentos e interações que exijam influência e comunicação`,
+        `Ofereça feedback com encorajamento antes de apontar pontos de melhoria — a ordem importa`,
+        `Posicione ${n} como referência em projetos de comunicação, inovação e engajamento de equipe`
       ],
-      idealEnvironment: `Ambientes colaborativos com interação social frequente e espaço para criatividade ${ctx}. Prefere variedade de tarefas, reconhecimento visível, liberdade de expressão e um time positivo ao redor.`,
-      stressTriggers: `Isolamento, tarefas muito técnicas e repetitivas, falta de reconhecimento e ambientes frios sem interação ${ctx} são os principais desgastes. Críticas públicas sem contexto positivo desmontam rapidamente este perfil.`,
-      motivationKeys: `Ser reconhecido, trabalhar com pessoas, ter liberdade criativa e sentir que está inspirando outros ${ctx}. A sensação de que sua presença faz diferença é o maior motivador.`,
-      communicationStyle: `Expressivo, caloroso e persuasivo — usa histórias, analogias e emoção para engajar. ${jobTitle ? `Em ${jobTitle}, prefere reuniões participativas, dinâmicas e que terminem com energia positiva.` : 'Evite comunicações frias ou apenas por escrito sem interação.'}`
+      idealEnvironment: `${n} performa melhor em ambientes colaborativos com interação social frequente e espaço para criatividade ${ctx}. Prefere variedade de tarefas, reconhecimento visível e um time positivo. Perde energia em ambientes frios, isolados ou excessivamente técnicos.`,
+      stressTriggers: `Isolamento, tarefas muito técnicas e repetitivas, falta de reconhecimento e ambientes frios sem interação são os principais desgastes para ${n} ${ctx}. Críticas públicas sem contexto positivo desmontam rapidamente este perfil.`,
+      motivationKeys: `${n} se motiva sendo reconhecido, trabalhando com pessoas, tendo liberdade criativa e sentindo que inspira os outros ${ctx}. A sensação de que sua presença faz diferença no time é o maior motivador deste perfil.`,
+      communicationStyle: `${n} tem comunicação expressiva, calorosa e persuasiva — usa histórias, analogias e emoção para engajar. ${jobTitle ? `Em ${jobTitle}, prefere reuniões participativas e dinâmicas que terminem com energia positiva.` : 'Evite comunicações frias ou apenas por escrito sem interação com este perfil.'}`
     },
     S: {
       strengths: [
-        `Confiabilidade excepcional ${ctx} — as pessoas sabem que podem contar com você sem precisar cobrar`,
-        `Capacidade de ouvir com atenção genuína, o que gera confiança em clientes e colegas`,
-        `Paciência para lidar com situações difíceis sem perder o equilíbrio emocional`,
+        `${n} tem confiabilidade excepcional ${ctx} — as pessoas sabem que podem contar com ele sem precisar cobrar`,
+        `Capacidade de ouvir com atenção genuína, o que gera confiança sólida em clientes e colegas`,
+        `Paciência para lidar com situações difíceis e pessoas em crise sem perder o equilíbrio emocional`,
         `Lealdade e comprometimento de longo prazo — constrói relações sólidas que sustentam resultados`,
         `Habilidade natural de criar ambientes harmoniosos onde as pessoas se sentem seguras e valorizadas`
       ],
       attentionPoints: [
-        `${ctxDesc}há risco de acumular demandas por dificuldade em recusar pedidos — o excesso leva ao esgotamento`,
-        `Resistência a mudanças rápidas pode atrasar adaptações necessárias ${ctx}`,
-        `A dificuldade em se posicionar firmemente pode deixar problemas sem resolução por muito tempo`,
-        `Pode ser percebido como passivo ou sem iniciativa em situações que exigem protagonismo`
+        `${ctxDesc}${n} pode acumular demandas por dificuldade em recusar pedidos — o excesso leva ao esgotamento silencioso`,
+        `Resistência a mudanças rápidas pode fazer com que ${n} atrase adaptações necessárias ${ctx}`,
+        `A dificuldade em se posicionar firmemente pode deixar problemas importantes sem resolução por tempo demais`,
+        `Pode ser percebido como passivo ou sem iniciativa em situações que exigem protagonismo e velocidade`
       ],
       weaknesses: [
-        `Dificuldade em tomar decisões rápidas sob pressão — precisa de tempo para processar ${ctx}`,
-        `Resistência a conflitos pode silenciar opiniões importantes que precisavam ser ditas`,
+        `${n} tem dificuldade em tomar decisões rápidas sob pressão — precisa de tempo para processar ${ctx}`,
+        `Resistência a conflitos pode silenciar opiniões importantes que precisavam ser expressas`,
         `Tendência a colocar as necessidades dos outros acima das próprias, gerando burnout silencioso`,
-        `Manutenção do status quo mesmo quando uma mudança necessária está clara para todos`
+        `Manutenção do status quo mesmo quando uma mudança necessária está clara para todos ao redor`
       ],
       howToDodgeNegatives: [
-        `Pratique dizer não de forma respeitosa ${ctx}: "Não consigo agora, mas posso ajudar em X data" é suficiente`,
-        `Estabeleça prazos pessoais antes de ser cobrado — a iniciativa muda a percepção de passividade`,
-        `Quando discordar de algo, expresse com clareza e suavidade: sua opinião tem valor e deve ser ouvida`,
-        `Reserve energia para si — liste sua carga atual antes de aceitar qualquer nova demanda`,
-        `Peça feedback trimestral para entender como está sendo percebido pela liderança — surpreende positivamente`
+        `Ao delegar tarefas a ${n}, estabeleça prazos claros com antecedência — a estrutura elimina a paralisia por sobrecarga`,
+        `Crie um canal individual e seguro para ${n} expressar opiniões — em grupo, este perfil tende a se calar`,
+        `Quando houver mudança de processo ou estrutura, comunique a ${n} com antecedência e explique o raciocínio`,
+        `Proteja ${n} de sobrecarga: monitore a carga de trabalho e intervenha antes do esgotamento aparecer`,
+        `Incentive ${n} a verbalizar discordâncias — sua opinião tem valor estratégico e precisa ser ouvida`
       ],
       howToManage: [
-        `Ofereça estabilidade e clareza nas expectativas ${ctx} — insegurança e ambiguidade paralisam este perfil`,
-        `Anuncie mudanças com antecedência e explique o raciocínio — isso elimina resistência antes que ela aconteça`,
-        `Reconheça a consistência e confiabilidade com a mesma frequência que reconhece grandes feitos`,
-        `Crie espaços seguros e individuais para que ele expresse opiniões — em grupo pode se calar`,
-        `Envolva-o em projetos de longo prazo que valorizam relacionamento, consistência e suporte ao cliente`
+        `Ofereça estabilidade e clareza nas expectativas para ${n} ${ctx} — insegurança e ambiguidade paralisam este perfil`,
+        `Anuncie mudanças com antecedência e explique o raciocínio — isso elimina a resistência antes que apareça`,
+        `Reconheça a consistência e confiabilidade de ${n} com a mesma frequência que reconhece grandes feitos`,
+        `Crie espaços individuais para que ${n} expresse opiniões — em grupo, este perfil pode se calar`,
+        `Envolva ${n} em projetos de longo prazo que valorizem relacionamento, consistência e suporte ao cliente`
       ],
-      idealEnvironment: `Ambiente estável, previsível e colaborativo ${ctx}. Prefere rotinas bem definidas, relações de confiança duradouras e um time unido onde há respeito mútuo e apoio genuíno.`,
-      stressTriggers: `Mudanças abruptas sem explicação, conflitos interpessoais não resolvidos, pressão por velocidade excessiva e ambientes de alta competição interna ${ctx} são os principais gatilhos de estresse e queda de rendimento.`,
-      motivationKeys: `Sentir que está contribuindo de forma significativa para a equipe, ter relações de confiança sólidas, estabilidade e ser reconhecido pelo trabalho consistente e pela lealdade ${ctx}.`,
-      communicationStyle: `Caloroso, paciente e empático — ouve mais do que fala e escolhe as palavras com cuidado. ${jobTitle ? `Em ${jobTitle}, valoriza explicações completas, conversas individuais e tempo para processar antes de responder.` : 'Prefere comunicação presencial ou por voz a trocas rápidas por texto.'}`
+      idealEnvironment: `${n} performa melhor em ambientes estáveis, previsíveis e colaborativos ${ctx}. Prefere rotinas bem definidas, relações de confiança duradouras e um time unido onde há respeito mútuo. Perde rendimento em ambientes de alta pressão e mudanças abruptas.`,
+      stressTriggers: `Mudanças abruptas sem explicação, conflitos interpessoais não resolvidos, pressão por velocidade excessiva e ambientes de alta competição interna são os principais gatilhos de queda de rendimento para ${n} ${ctx}.`,
+      motivationKeys: `${n} se motiva sentindo que contribui de forma significativa para a equipe, tendo relações de confiança sólidas, estabilidade no ambiente e sendo reconhecido pelo trabalho consistente e pela lealdade ${ctx}.`,
+      communicationStyle: `${n} tem comunicação calorosa, paciente e empática — ouve mais do que fala e escolhe as palavras com cuidado. ${jobTitle ? `Em ${jobTitle}, valoriza explicações completas, conversas individuais e tempo para processar antes de responder.` : 'Prefira comunicação presencial ou por voz a trocas rápidas por texto com este perfil.'}`
     },
     C: {
       strengths: [
-        `Precisão e qualidade técnica nas entregas ${ctx} — entrega com pouquíssima margem de erro`,
-        `Capacidade analítica para identificar riscos, inconsistências e oportunidades que outros não veem`,
-        `Organização e sistematização que transforma processos caóticos em fluxos replicáveis`,
+        `${n} tem precisão e qualidade técnica nas entregas ${ctx} — entrega com pouquíssima margem de erro`,
+        `Capacidade analítica para identificar riscos, inconsistências e oportunidades que outros não percebem`,
+        `Organização e sistematização que transforma processos caóticos em fluxos replicáveis e eficientes`,
         `Comprometimento rigoroso com padrões de qualidade e excelência — não entrega "mais ou menos"`,
         `Habilidade de investigar problemas até encontrar a causa raiz, evitando soluções superficiais`
       ],
       attentionPoints: [
-        `${ctxDesc}há risco de analisar em excesso e atrasar decisões que precisam de velocidade ${ctx}`,
-        `O perfeccionismo pode gerar retrabalho desnecessário em entregas que já estavam adequadas`,
-        `Dificuldade em delegar: acredita que ninguém vai fazer no padrão necessário — isso gera gargalos`,
-        `Comunicação técnica pode criar distância com perfis menos analíticos em reuniões e apresentações`
+        `${ctxDesc}${n} pode analisar em excesso e atrasar decisões que precisam de velocidade ${ctx}`,
+        `O perfeccionismo de ${n} pode gerar retrabalho desnecessário em entregas que já estavam adequadas`,
+        `Dificuldade em delegar: acredita que ninguém vai fazer no padrão necessário — isso cria gargalos`,
+        `Comunicação técnica de ${n} pode criar distância com perfis menos analíticos em reuniões e apresentações`
       ],
       weaknesses: [
-        `Resistência a improvisar — situações fora do planejado ${ctx} geram ansiedade e queda de performance`,
-        `Pode ser excessivamente crítico com erros próprios e alheios, gerando clima de tensão`,
+        `${n} tem resistência a improvisar — situações fora do planejado ${ctx} geram ansiedade e queda de performance`,
+        `Pode ser excessivamente crítico com erros próprios e alheios, gerando clima de tensão na equipe`,
         `Dificuldade em tomar decisões com informações incompletas — espera por mais dados que podem não chegar`,
         `Pode parecer frio ou distante em contextos emocionais onde a conexão humana é necessária`
       ],
       howToDodgeNegatives: [
-        `Defina o critério de "bom o suficiente" ${ctx} antes de começar — nem tudo precisa de 100% de perfeição`,
-        `Use o princípio 80/20: 80% do resultado vem de 20% do esforço — identifique esse 20% e priorize`,
-        `Estabeleça um prazo máximo de análise antes de decidir: "Tenho até X para reunir dados, depois decido"`,
-        `Treine a comunicação visual e narrativa — dados precisam de contexto emocional para convencer pessoas`,
-        `Celebre entregas boas, mesmo que não sejam perfeitas — o reconhecimento do processo fortalece a equipe`
+        `Ao briefar ${n}, defina critérios claros de "bom o suficiente" — nem toda entrega precisa de 100% de perfeição`,
+        `Estabeleça prazos máximos de análise para ${n}: "Até X você reúne os dados, depois a gente decide junto"`,
+        `Peça que ${n} apresente as conclusões de forma acessível, com contexto para não especialistas`,
+        `Crie marcos de entrega intermediários — isso evita que ${n} refine indefinidamente sem avançar`,
+        `Valorize explicitamente a qualidade das entregas de ${n}: ele precisa ouvir que precisão tem valor para a empresa`
       ],
       howToManage: [
-        `Forneça dados, critérios claros e contexto lógico ${ctx} — este perfil responde à razão, não à emoção`,
-        `Dê tempo adequado para análise — pressão por velocidade gera qualidade inferior e resistência`,
-        `Valorize a precisão e profundidade das entregas, não só a velocidade — ele precisa saber que qualidade importa`,
+        `Forneça dados, critérios claros e contexto lógico a ${n} ${ctx} — este perfil responde à razão, não à emoção`,
+        `Dê tempo adequado para análise — pressão por velocidade gera qualidade inferior e resistência de ${n}`,
+        `Valorize a precisão e profundidade das entregas de ${n}, não só a velocidade — ele precisa saber que qualidade importa`,
         `Apresente mudanças com justificativas racionais, evidências e impacto esperado — evite "porque sim"`,
-        `Envolva-o em projetos que exijam planejamento, auditoria, controle de qualidade e análise de dados`
+        `Envolva ${n} em projetos que exijam planejamento, auditoria, controle de qualidade e análise de dados`
       ],
-      idealEnvironment: `Ambiente estruturado com processos claros e espaço para aprofundamento técnico ${ctx}. Prefere trabalhar com dados, padrões bem definidos e autonomia para garantir qualidade sem pressão por improvisar.`,
-      stressTriggers: `Improvisação forçada, informações insuficientes para decidir, ambientes caóticos e pressão para entregar sem tempo adequado de análise ${ctx} são os principais gatilhos de queda de desempenho.`,
-      motivationKeys: `Resolver problemas complexos com qualidade, alcançar padrões de excelência reconhecidos, ter acesso a dados e ferramentas adequadas e ser valorizado pela precisão e competência técnica ${ctx}.`,
-      communicationStyle: `Preciso, lógico e baseado em fatos — prefere comunicação escrita com dados, estrutura clara e conclusões documentadas. ${jobTitle ? `Em ${jobTitle}, valoriza reuniões com pauta definida, atas e decisões registradas.` : 'Evite comunicações vagas ou baseadas apenas em intuição.'}`
+      idealEnvironment: `${n} performa melhor em ambientes estruturados com processos claros e espaço para aprofundamento técnico ${ctx}. Prefere trabalhar com dados e padrões bem definidos. Perde rendimento sob improvisação forçada ou em ambientes caóticos.`,
+      stressTriggers: `Improvisação forçada, informações insuficientes para decidir, ambientes caóticos e pressão para entregar sem tempo adequado de análise são os principais gatilhos de queda de desempenho para ${n} ${ctx}.`,
+      motivationKeys: `${n} se motiva resolvendo problemas complexos com qualidade, alcançando padrões de excelência reconhecidos e sendo valorizado pela precisão e competência técnica ${ctx}. Ter acesso a dados e ferramentas adequadas é essencial.`,
+      communicationStyle: `${n} tem comunicação precisa, lógica e baseada em fatos — prefere escrita com dados, estrutura clara e conclusões documentadas. ${jobTitle ? `Em ${jobTitle}, valoriza reuniões com pauta definida, atas e decisões registradas.` : 'Evite comunicações vagas ou baseadas apenas em intuição com este perfil.'}`
     }
   }
 
   const p = PROFILES[dominant] || PROFILES.D
   const secName = TYPE_DESCRIPTIONS[secondary]?.name || ''
   const secInfluence = {
-    D: { I: 'A influência do perfil I adiciona carisma e facilidade de comunicação às suas decisões assertivas.', S: 'O S secundário traz paciência e cuidado com as pessoas, equilibrando sua determinação.', C: 'O C secundário adiciona rigor analítico às suas decisões — você age rápido mas com embasamento.' },
-    I: { D: 'A influência do D adiciona assertividade e foco em resultados ao seu entusiasmo natural.', S: 'O S secundário traz empatia profunda e consistência, tornando sua influência mais duradoura.', C: 'O C secundário adiciona organização e profundidade às suas ideias criativas.' },
-    S: { D: 'A influência do D adiciona iniciativa e assertividade quando necessário, saindo da zona de conforto.', I: 'O I secundário traz leveza, humor e comunicação mais expressiva ao seu jeito cuidadoso.', C: 'O C secundário reforça a organização e atenção aos detalhes no seu trabalho consistente.' },
-    C: { D: 'A influência do D adiciona velocidade e decisão à sua análise — você age quando tem dados suficientes.', I: 'O I secundário traz calor humano e comunicação mais acessível às suas entregas técnicas.', S: 'O S secundário adiciona paciência e cuidado com as pessoas ao seu perfil analítico.' }
+    D: { I: `A influência do perfil I adiciona carisma e facilidade de comunicação às decisões assertivas de ${n}.`, S: `O perfil S secundário traz paciência e cuidado com as pessoas, equilibrando a determinação de ${n}.`, C: `O C secundário adiciona rigor analítico às decisões de ${n} — age rápido, mas com embasamento.` },
+    I: { D: `A influência do D adiciona assertividade e foco em resultados ao entusiasmo natural de ${n}.`, S: `O S secundário traz empatia profunda e consistência, tornando a influência de ${n} mais duradoura.`, C: `O C secundário adiciona organização e profundidade às ideias criativas de ${n}.` },
+    S: { D: `A influência do D adiciona iniciativa e assertividade quando necessário ao jeito cuidadoso de ${n}.`, I: `O I secundário traz leveza, humor e comunicação mais expressiva ao perfil consistente de ${n}.`, C: `O C secundário reforça a organização e atenção aos detalhes no trabalho consistente de ${n}.` },
+    C: { D: `A influência do D adiciona velocidade e decisão à análise de ${n} — age quando tem dados suficientes.`, I: `O I secundário traz calor humano e comunicação mais acessível às entregas técnicas de ${n}.`, S: `O S secundário adiciona paciência e cuidado com as pessoas ao perfil analítico de ${n}.` }
   }
   const influence = secInfluence[dominant]?.[secondary] || ''
 
@@ -351,16 +352,17 @@ function generateDetailedProfile(dominant, secondary, role, jobTitle, jobDescrip
   }
 }
 
-function generateAnalysis(pcts, cats, jobTitle, jobDescription) {
+function generateAnalysis(pcts, cats, jobTitle, jobDescription, employeeName) {
   const { dominant, secondary } = getDominantType(pcts)
+  const n = employeeName || 'Este profissional'
   const currFn = cats && cats.length > 0 ? cats[0] : null
   const currFit = currFn ? calculateFit(pcts, currFn) : 0
   const allFits = Object.keys(FUNCTION_PROFILES).map(fn => ({ functionName: fn, fitPercentage: calculateFit(pcts, fn) })).sort((a, b) => b.fitPercentage - a.fitPercentage)
-  const top3 = allFits.slice(0, 3).map(f => ({ ...f, reason: f.fitPercentage >= 80 ? `Alta compatibilidade: seu perfil ${TYPE_DESCRIPTIONS[dominant].name} se alinha muito bem com as exigências desta função.` : f.fitPercentage >= 60 ? `Boa compatibilidade: seu perfil tem características relevantes para esta função com alguns pontos de desenvolvimento.` : `Compatibilidade moderada: há espaço para crescimento, mas exige desenvolvimento em áreas específicas.` }))
-  const tips = currFn ? (TYPE_TIPS[dominant]?.[currFn] || 'Continue desenvolvendo suas competências e solicite feedback regular ao seu gestor.') : 'Defina sua função principal para receber dicas personalizadas de desenvolvimento.'
+  const top3 = allFits.slice(0, 3).map(f => ({ ...f, reason: f.fitPercentage >= 80 ? `Alta compatibilidade: o perfil ${TYPE_DESCRIPTIONS[dominant].name} de ${n} se alinha muito bem com as exigências desta função.` : f.fitPercentage >= 60 ? `Boa compatibilidade: ${n} tem características relevantes para esta função com alguns pontos de desenvolvimento.` : `Compatibilidade moderada: há espaço para crescimento, mas exige desenvolvimento em áreas específicas para ${n}.` }))
+  const tips = currFn ? (TYPE_TIPS[dominant]?.[currFn] || `Continue acompanhando o desenvolvimento de ${n} e ofereça feedback regular sobre desempenho e comportamento.`) : `Defina a função principal de ${n} para receber dicas personalizadas de gestão.`
   const strengths = { D: 'Decisão, foco em resultados, liderança', I: 'Comunicação, persuasão, inspiração', S: 'Confiabilidade, paciência, consistência', C: 'Precisão, organização, análise' }
   const challenges = { D: 'Impaciência, autoritarismo', I: 'Impulsividade, desorganização', S: 'Resistência a mudanças', C: 'Perfeccionismo, lentidão' }
-  const profileDetails = generateDetailedProfile(dominant, secondary, currFn, jobTitle, jobDescription)
+  const profileDetails = generateDetailedProfile(dominant, secondary, currFn, jobTitle, jobDescription, employeeName)
   return {
     currentFunctionFit: currFit, currentFunctionName: currFn || 'Não informado',
     recommendations: top3, improvementTips: tips,
@@ -489,18 +491,37 @@ app.post('/api/disc/submit', async (req, res) => {
     const scores = calculateDISCScores(responses)
     const percentages = calculatePercentages(scores)
     const { dominant, secondary } = getDominantType(percentages)
-    const analysis = generateAnalysis(percentages, employeeData?.functionCategories || [], employeeData?.jobTitle || '', employeeData?.jobDescription || '')
+    const empName = employeeData?.name || inv.employeeName || ''
+    const analysis = generateAnalysis(percentages, employeeData?.functionCategories || [], employeeData?.jobTitle || '', employeeData?.jobDescription || '', empName)
     const targetEmail = (employeeData?.email || inv.employeeEmail || '').toLowerCase()
     let emp = await dbFindOne('employees', { email: targetEmail, companyId: inv.companyId })
     if (!emp) {
       const eid = uuidv4()
-      emp = { _id: eid, id: eid, companyId: inv.companyId, name: employeeData?.name || inv.employeeName, email: targetEmail, phone: employeeData?.phone || '', department: employeeData?.department || '', jobTitle: employeeData?.jobTitle || '', jobDescription: employeeData?.jobDescription || '', functionCategories: employeeData?.functionCategories || [], profilePhoto: employeeData?.profilePhoto || null, createdAt: new Date().toISOString() }
+      emp = { _id: eid, id: eid, companyId: inv.companyId, name: empName, email: targetEmail, phone: employeeData?.phone || '', department: employeeData?.department || '', jobTitle: employeeData?.jobTitle || '', jobDescription: employeeData?.jobDescription || '', functionCategories: employeeData?.functionCategories || [], profilePhoto: employeeData?.profilePhoto || null, createdAt: new Date().toISOString() }
       await dbInsert('employees', emp)
     }
+    // ── Relocation suggestions when fit < 20% ────────────────────────────────
+    let relocationSuggestions = []
+    if (analysis.currentFunctionFit < 20) {
+      try {
+        const cfDoc = await dbFindOne('companyFunctions', { companyId: inv.companyId })
+        if (cfDoc?.sectors?.length > 0) {
+          const suggestions = []
+          for (const sector of cfDoc.sectors) {
+            for (const fn of (sector.functions || [])) {
+              if (fn.discCategory && FUNCTION_PROFILES[fn.discCategory]) {
+                suggestions.push({ functionName: fn.name, sectorName: sector.name, fitPercentage: calculateFit(percentages, fn.discCategory) })
+              }
+            }
+          }
+          relocationSuggestions = suggestions.sort((a, b) => b.fitPercentage - a.fitPercentage).slice(0, 3)
+        }
+      } catch (_) {}
+    }
     const rid = uuidv4()
-    await dbInsert('discResults', { _id: rid, id: rid, employeeId: emp._id, companyId: inv.companyId, invitationId: inv._id, responses, scores, percentages, dominantType: dominant, secondaryType: secondary, analysis, completedAt: new Date().toISOString() })
+    await dbInsert('discResults', { _id: rid, id: rid, employeeId: emp._id, companyId: inv.companyId, invitationId: inv._id, responses, scores, percentages, dominantType: dominant, secondaryType: secondary, analysis, relocationSuggestions, completedAt: new Date().toISOString() })
     await dbUpdateOne('invitations', { _id: inv._id }, { used: true, usedAt: new Date().toISOString() })
-    return res.json({ percentages, dominantType: dominant, secondaryType: secondary, description: TYPE_DESCRIPTIONS[dominant].description, analysis: { currentFunctionFit: analysis.currentFunctionFit, currentFunctionName: analysis.currentFunctionName, recommendations: analysis.recommendations, improvementTips: analysis.improvementTips, strengthsInCurrentRole: analysis.strengthsInCurrentRole, challengesInCurrentRole: analysis.challengesInCurrentRole, profileDetails: analysis.profileDetails } })
+    return res.json({ percentages, dominantType: dominant, secondaryType: secondary, description: TYPE_DESCRIPTIONS[dominant].description, analysis: { currentFunctionFit: analysis.currentFunctionFit, currentFunctionName: analysis.currentFunctionName, recommendations: analysis.recommendations, improvementTips: analysis.improvementTips, strengthsInCurrentRole: analysis.strengthsInCurrentRole, challengesInCurrentRole: analysis.challengesInCurrentRole, profileDetails: analysis.profileDetails }, relocationSuggestions })
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
@@ -527,6 +548,27 @@ app.get('/api/dashboard/stats', auth, async (req, res) => {
       discDistribution.C = Math.round(discDistribution.C / results.length)
     }
     return res.json({ totalEmployees: employees.length, completedTests: results.length, pendingInvitations: pending, discDistribution, avgFit: fitCount > 0 ? Math.round(totalFit / fitCount) : 0 })
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
+// ── Company functions routes ──────────────────────────────────────────────────
+app.get('/api/company/functions', auth, async (req, res) => {
+  try {
+    const doc = await dbFindOne('companyFunctions', { companyId: req.companyId })
+    return res.json(doc ? doc.sectors : [])
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
+app.put('/api/company/functions', auth, async (req, res) => {
+  try {
+    const { sectors } = req.body
+    const existing = await dbFindOne('companyFunctions', { companyId: req.companyId })
+    if (existing) {
+      await dbUpdateOne('companyFunctions', { companyId: req.companyId }, { sectors: sectors || [] })
+    } else {
+      await dbInsert('companyFunctions', { _id: uuidv4(), id: uuidv4(), companyId: req.companyId, sectors: sectors || [] })
+    }
+    return res.json({ sectors: sectors || [] })
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 

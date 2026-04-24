@@ -71,6 +71,7 @@ export default function EmployeeDetailPage() {
   const pcts = result?.percentages || { D: 0, I: 0, S: 0, C: 0 }
   const analysis = result?.analysis
   const profile = analysis?.profileDetails
+  const relocationSuggestions = result?.relocationSuggestions || []
 
   const radarData = Object.entries(pcts).map(([key, value]) => ({
     subject: `${key} — ${DISC_NAMES[key]}`,
@@ -225,6 +226,45 @@ export default function EmployeeDetailPage() {
                   </div>
                 </div>
               </SectionCard>
+            </div>
+          )}
+
+          {analysis?.currentFunctionFit < 20 && (
+            <div className="bg-red-50 border-2 border-red-300 rounded-xl p-5">
+              <div className="flex items-start gap-3 mb-4">
+                <span className="text-2xl">🚨</span>
+                <div>
+                  <h3 className="font-bold text-red-800 text-lg">Baixa adequação detectada — Sugestão de Realocação</h3>
+                  <p className="text-sm text-red-700 mt-1">
+                    A adequação de <strong>{employee.name}</strong> à função atual é de apenas <strong>{analysis.currentFunctionFit}%</strong>.
+                    {relocationSuggestions.length > 0
+                      ? ' Com base no perfil DISC e nas funções cadastradas na empresa, veja as melhores opções de realocação:'
+                      : ' Cadastre as funções da sua empresa na aba "Funções e Setores" para receber sugestões de realocação personalizadas.'}
+                  </p>
+                </div>
+              </div>
+              {relocationSuggestions.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {relocationSuggestions.map((sug, i) => (
+                    <div key={i} className="bg-white border border-red-200 rounded-xl p-4">
+                      <div className="flex items-start justify-between mb-1">
+                        <div>
+                          <div className="font-semibold text-gray-900">{i + 1}. {sug.functionName}</div>
+                          <div className="text-xs text-gray-500">{sug.sectorName}</div>
+                        </div>
+                        <span className="text-xl font-bold ml-2" style={{ color: fitColor(sug.fitPercentage) }}>{sug.fitPercentage}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mt-2">
+                        <div className="h-full rounded-full" style={{ width: sug.fitPercentage + '%', backgroundColor: fitColor(sug.fitPercentage) }}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <a href="/company-functions" className="inline-flex items-center gap-2 text-sm font-medium text-red-700 hover:text-red-900 underline">
+                  Cadastrar Funções e Setores →
+                </a>
+              )}
             </div>
           )}
 

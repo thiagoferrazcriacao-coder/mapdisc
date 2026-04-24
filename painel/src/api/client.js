@@ -48,4 +48,6 @@ export const api = {
   createInvitation: (data) => request('POST', '/invitations', data),
   deleteInvitation: (id) => request('DELETE', `/invitations/${id}`),
   getDashboardStats: () => request('GET', '/dashboard/stats'),
+  getCompanyFunctions: () => request('GET', '/company/functions'),
+  saveCompanyFunctions: (sectors) => request('PUT', '/company/functions', { sectors }),
 }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0057FF">
+<meta name="theme-color" content="#7C3AED">
 <title>MapDISC — Perfil Comportamental</title>
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="apple-touch-icon" href="logo.png">
@@ -14,31 +14,31 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;backgroun
 .screen{display:none;min-height:100vh;padding:24px 20px;animation:fadeIn .3s ease}
 .screen.active{display:flex;flex-direction:column;align-items:center}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.btn-primary{background:#0057FF;color:#fff;border:none;border-radius:12px;padding:14px 32px;font-size:16px;font-weight:600;cursor:pointer;width:100%;max-width:400px;transition:all .2s;touch-action:manipulation}
-.btn-primary:hover{background:#003FCC}
-.btn-primary:disabled{background:#80ABFF;cursor:not-allowed}
+.btn-primary{background:#7C3AED;color:#fff;border:none;border-radius:12px;padding:14px 32px;font-size:16px;font-weight:600;cursor:pointer;width:100%;max-width:400px;transition:all .2s;touch-action:manipulation}
+.btn-primary:hover{background:#5B21B6}
+.btn-primary:disabled{background:#C4B5FD;cursor:not-allowed}
 .input{width:100%;max-width:400px;border:1.5px solid #D1D5DB;border-radius:10px;padding:12px 14px;font-size:16px;background:#fff;transition:border .2s;-webkit-appearance:none}
-.input:focus{outline:none;border-color:#0057FF;box-shadow:0 0 0 3px rgba(0,87,255,.15)}
+.input:focus{outline:none;border-color:#7C3AED;box-shadow:0 0 0 3px rgba(124,58,237,.15)}
 .label{display:block;font-size:13px;font-weight:600;color:#6B7280;margin-bottom:6px;max-width:400px;width:100%}
 .card{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);padding:20px;width:100%;max-width:400px}
 .progress-bar{width:100%;max-width:400px;height:6px;background:#E5E7EB;border-radius:3px;margin:16px 0;overflow:hidden}
-.progress-fill{height:100%;background:#0057FF;border-radius:3px;transition:width .3s ease}
+.progress-fill{height:100%;background:#7C3AED;border-radius:3px;transition:width .3s ease}
 .category-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:400px}
 .category-btn{padding:12px 8px;border:2px solid #E5E7EB;border-radius:10px;background:#fff;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center;touch-action:manipulation}
-.category-btn.selected{border-color:#0057FF;background:#EEF4FF;color:#0057FF;font-weight:600}
+.category-btn.selected{border-color:#7C3AED;background:#F5F0FF;color:#7C3AED;font-weight:600}
 .statement-card{background:#fff;border:2px solid #E5E7EB;border-radius:12px;padding:16px;margin-bottom:10px;cursor:pointer;transition:all .15s;touch-action:manipulation;font-size:15px;line-height:1.5;min-height:56px;display:flex;align-items:center}
-.statement-card:hover{border-color:#80ABFF}
+.statement-card:hover{border-color:#C4B5FD}
 .statement-card.most{border-color:#10B981;background:#ECFDF5;color:#065F46;box-shadow:0 0 0 2px rgba(16,185,129,.2)}
 .statement-card.least{border-color:#EF4444;background:#FEF2F2;color:#991B1B;box-shadow:0 0 0 2px rgba(239,68,68,.2)}
 .statement-card .badge{margin-left:auto;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;flex-shrink:0}
 .statement-card.most .badge{background:#10B981;color:#fff}
 .statement-card.least .badge{background:#EF4444;color:#fff}
-.loading-spinner{width:48px;height:48px;border:4px solid #E5E7EB;border-top-color:#0057FF;border-radius:50%;animation:spin 1s linear infinite}
+.loading-spinner{width:48px;height:48px;border:4px solid #E5E7EB;border-top-color:#7C3AED;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .result-wheel{position:relative;width:200px;height:200px;margin:24px auto}
 .result-wheel svg{width:100%;height:100%;transform:rotate(-90deg)}
 .result-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
-.result-center .dominant{font-size:36px;font-weight:800;color:#0057FF;line-height:1}
+.result-center .dominant{font-size:36px;font-weight:800;color:#7C3AED;line-height:1}
 .result-center .label{font-size:12px;color:#6B7280;margin-top:2px}
 .fit-bar{width:100%;max-width:400px;height:10px;background:#E5E7EB;border-radius:5px;overflow:hidden;margin:8px 0 4px}
 .fit-fill{height:100%;border-radius:5px;transition:width .5s ease}
@@ -56,22 +56,22 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;backgroun
 .font-bold{font-weight:700}
 .text-lg{font-size:18px}
 .text-xl{font-size:22px}
-.text-blue{color:#0057FF}
+.text-blue{color:#7C3AED}
 .text-red{color:#EF4444}
 .text-green{color:#10B981}
-.bg-blue{background:#0057FF}
-.welcome-bg{background:linear-gradient(135deg,#003FCC 0%,#0057FF 50%,#00AAFF 100%);color:#fff;justify-content:center;text-align:center}
+.bg-blue{background:#7C3AED}
+.welcome-bg{background:linear-gradient(135deg,#0a0010 0%,#1E0D4E 50%,#7C3AED 100%);color:#fff;justify-content:center;text-align:center}
 .welcome-logo{font-size:36px;font-weight:800;margin-bottom:8px}
 .welcome-sub{font-size:16px;opacity:.9;margin-bottom:32px;line-height:1.5}
-.welcome-btn{background:#fff;color:#0057FF;border:none;border-radius:12px;padding:14px 40px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation}
+.welcome-btn{background:#fff;color:#7C3AED;border:none;border-radius:12px;padding:14px 40px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation}
 textarea.input{resize:vertical;min-height:80px}
 .photo-upload-area{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:16px}
-.photo-preview{width:120px;height:120px;border-radius:50%;background:#EEF4FF;border:3px solid #0057FF;display:flex;align-items:center;justify-content:center;overflow:hidden;margin:0 auto}
+.photo-preview{width:120px;height:120px;border-radius:50%;background:#F5F0FF;border:3px solid #7C3AED;display:flex;align-items:center;justify-content:center;overflow:hidden;margin:0 auto}
 .photo-preview img{width:100%;height:100%;object-fit:cover}
-.photo-preview .placeholder-icon{font-size:48px;color:#80ABFF}
+.photo-preview .placeholder-icon{font-size:48px;color:#C4B5FD}
 .photo-btns{display:flex;gap:10px;width:100%;justify-content:center}
-.photo-btn{flex:1;max-width:180px;padding:10px 8px;border:2px solid #0057FF;border-radius:10px;background:#fff;color:#0057FF;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;touch-action:manipulation;transition:all .15s}
-.photo-btn:active{background:#EEF4FF}
+.photo-btn{flex:1;max-width:180px;padding:10px 8px;border:2px solid #7C3AED;border-radius:10px;background:#fff;color:#7C3AED;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;touch-action:manipulation;transition:all .15s}
+.photo-btn:active{background:#F5F0FF}
 </style>
 </head>
 <body>
@@ -149,7 +149,7 @@ textarea.input{resize:vertical;min-height:80px}
 
 <div id="processing" class="screen" style="justify-content:center;align-items:center;text-align:center">
 <div class="loading-spinner"></div>
-<p class="mt-4" style="font-size:18px;font-weight:600;color:#0057FF">Analisando seu perfil...</p>
+<p class="mt-4" style="font-size:18px;font-weight:600;color:#7C3AED">Analisando seu perfil...</p>
 <p class="text-sm mt-2" style="color:#6B7280">Aguarde um momento</p>
 </div>
 
