@@ -30,10 +30,11 @@ export default function InvitationsPage() {
     setCreating(true)
     setError('')
     try {
-      await api.createInvitation({ ...form, employeeName: form.employeeName.trim() })
+      const newInv = await api.createInvitation({ ...form, employeeName: form.employeeName.trim() })
       setShowModal(false)
       setForm({ employeeName: '', employeeEmail: '' })
-      await loadInvitations()
+      // Adiciona na lista imediatamente sem precisar recarregar
+      setInvitations(prev => [newInv, ...prev])
     } catch (err) {
       setError(err.message || 'Erro ao criar convite. Tente novamente.')
     } finally {

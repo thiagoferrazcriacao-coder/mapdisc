@@ -419,10 +419,10 @@ app.get('/api/auth/me', auth, async (req, res) => {
 // ── Invitation routes ─────────────────────────────────────────────────────────
 app.post('/api/invitations', auth, async (req, res) => {
   try {
-    const { employeeName, employeeEmail } = req.body
+    const { employeeName, employeeEmail, employeeId } = req.body
     if (!employeeName) return res.status(400).json({ error: 'Nome obrigatório' })
     const id = uuidv4(); const token = uuidv4()
-    const invitation = { _id: id, id, companyId: req.companyId, token, employeeName, employeeEmail: employeeEmail?.toLowerCase(), used: false, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), usedAt: null, createdAt: new Date().toISOString() }
+    const invitation = { _id: id, id, companyId: req.companyId, token, employeeName, employeeEmail: employeeEmail?.toLowerCase() || '', employeeId: employeeId || null, used: false, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), usedAt: null, createdAt: new Date().toISOString() }
     await dbInsert('invitations', invitation)
     return res.status(201).json(invitation)
   } catch (err) { return res.status(500).json({ error: err.message }) }
@@ -448,11 +448,27 @@ app.get('/api/invitations/public/:token', async (req, res) => {
     const invitations = await dbFind('invitations', { token: req.params.token, used: false })
     const inv = invitations.find(i => new Date(i.expiresAt) > new Date())
     if (!inv) return res.status(404).json({ error: 'Convite inválido ou expirado' })
-    return res.json({ employeeName: inv.employeeName, employeeEmail: inv.employeeEmail, companyId: inv.companyId })
+    let jobTitle = ''
+    if (inv.employeeId) {
+      const emp = await dbFindOne('employees', { _id: inv.employeeId })
+      jobTitle = emp?.jobTitle || ''
+    }
+    return res.json({ employeeName: inv.employeeName, employeeEmail: inv.employeeEmail, companyId: inv.companyId, employeeId: inv.employeeId || null, jobTitle })
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
 // ── Employee routes ───────────────────────────────────────────────────────────
+app.post('/api/employees', auth, async (req, res) => {
+  try {
+    const { name, jobTitle, email, department, functionCategories } = req.body
+    if (!name) return res.status(400).json({ error: 'Nome obrigatório' })
+    const id = uuidv4()
+    const emp = { _id: id, id, companyId: req.companyId, name, email: email?.toLowerCase() || '', jobTitle: jobTitle || '', jobDescription: '', department: department || '', functionCategories: functionCategories || (jobTitle ? [jobTitle] : []), profilePhoto: null, createdAt: new Date().toISOString() }
+    await dbInsert('employees', emp)
+    return res.status(201).json(emp)
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
 app.get('/api/employees', auth, async (req, res) => {
   try {
     const employees = await dbFind('employees', { companyId: req.companyId })
@@ -494,11 +510,27 @@ app.post('/api/disc/submit', async (req, res) => {
     const empName = employeeData?.name || inv.employeeName || ''
     const analysis = generateAnalysis(percentages, employeeData?.functionCategories || [], employeeData?.jobTitle || '', employeeData?.jobDescription || '', empName)
     const targetEmail = (employeeData?.email || inv.employeeEmail || '').toLowerCase()
-    let emp = await dbFindOne('employees', { email: targetEmail, companyId: inv.companyId })
+    // Find pre-created employee by employeeId (from panel creation) or by email
+    let emp = inv.employeeId
+      ? await dbFindOne('employees', { _id: inv.employeeId, companyId: inv.companyId })
+      : (targetEmail ? await dbFindOne('employees', { email: targetEmail, companyId: inv.companyId }) : null)
     if (!emp) {
       const eid = uuidv4()
       emp = { _id: eid, id: eid, companyId: inv.companyId, name: empName, email: targetEmail, phone: employeeData?.phone || '', department: employeeData?.department || '', jobTitle: employeeData?.jobTitle || '', jobDescription: employeeData?.jobDescription || '', functionCategories: employeeData?.functionCategories || [], profilePhoto: employeeData?.profilePhoto || null, createdAt: new Date().toISOString() }
       await dbInsert('employees', emp)
+    } else {
+      // Update pre-created employee with data filled in by the employee during the test
+      const updates = {}
+      if (employeeData?.phone) updates.phone = employeeData.phone
+      if (employeeData?.department) updates.department = employeeData.department
+      if (employeeData?.jobTitle) updates.jobTitle = employeeData.jobTitle
+      if (employeeData?.jobDescription) updates.jobDescription = employeeData.jobDescription
+      if (employeeData?.functionCategories?.length) updates.functionCategories = employeeData.functionCategories
+      if (employeeData?.profilePhoto) updates.profilePhoto = employeeData.profilePhoto
+      if (Object.keys(updates).length > 0) {
+        await dbUpdateOne('employees', { _id: emp._id }, updates)
+        emp = { ...emp, ...updates }
+      }
     }
     // ── Relocation suggestions when fit < 20% ────────────────────────────────
     let relocationSuggestions = []

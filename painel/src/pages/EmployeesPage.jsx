@@ -11,6 +11,14 @@ export default function EmployeesPage() {
   const [filterDept, setFilterDept] = useState('')
   const [filterDisc, setFilterDisc] = useState('')
 
+  // Modal states
+  const [showModal, setShowModal] = useState(false)
+  const [form, setForm] = useState({ name: '', jobTitle: '', email: '' })
+  const [creating, setCreating] = useState(false)
+  const [error, setError] = useState('')
+  const [createdLink, setCreatedLink] = useState(null) // link após criar
+  const [copied, setCopied] = useState(false)
+
   useEffect(() => { loadEmployees() }, [])
 
   const loadEmployees = async () => {
@@ -21,6 +29,54 @@ export default function EmployeesPage() {
       console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const openModal = () => {
+    setForm({ name: '', jobTitle: '', email: '' })
+    setError('')
+    setCreatedLink(null)
+    setCopied(false)
+    setShowModal(true)
+  }
+
+  const closeModal = () => {
+    setShowModal(false)
+    setCreatedLink(null)
+    setCopied(false)
+  }
+
+  const handleCreate = async (e) => {
+    e.preventDefault()
+    if (!form.name.trim()) return setError('Nome é obrigatório')
+    if (!form.jobTitle.trim()) return setError('Função é obrigatória')
+    setCreating(true)
+    setError('')
+    try {
+      // 1. Cria o funcionário
+      const emp = await api.createEmployee({
+        name: form.name.trim(),
+        jobTitle: form.jobTitle.trim(),
+        email: form.email.trim() || '',
+        functionCategories: [form.jobTitle.trim()]
+      })
+      // 2. Cria o convite vinculado ao funcionário
+      const inv = await api.createInvitation({
+        employeeName: form.name.trim(),
+        employeeEmail: form.email.trim() || '',
+        employeeId: emp.id || emp._id
+      })
+      const link = `${window.location.origin}/teste?token=${inv.token}`
+      setCreatedLink(link)
+      // Copia automaticamente
+      navigator.clipboard.writeText(link).catch(() => {})
+      setCopied(true)
+      // Adiciona funcionário na lista imediatamente
+      setEmployees(prev => [{ ...emp, discResult: null }, ...prev])
+    } catch (err) {
+      setError(err.message || 'Erro ao criar funcionário')
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -39,7 +95,7 @@ export default function EmployeesPage() {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Funcionários</h1>
-        <Link to="/invitations" className="btn-primary text-sm">+ Novo Convite</Link>
+        <button onClick={openModal} className="btn-primary text-sm">+ Novo Funcionário</button>
       </div>
 
       <div className="card mb-6">
@@ -114,6 +170,86 @@ export default function EmployeesPage() {
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Modal Novo Funcionário */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={closeModal}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+
+            {!createdLink ? (
+              <>
+                <h2 className="text-lg font-semibold text-gray-900 mb-1">Novo Funcionário</h2>
+                <p className="text-sm text-gray-500 mb-4">Preencha os dados e um link de teste DISC será gerado automaticamente</p>
+                {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm">{error}</div>}
+                <form onSubmit={handleCreate} noValidate>
+                  <div className="mb-4">
+                    <label className="label">Nome do Funcionário *</label>
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="Nome completo"
+                      value={form.name}
+                      onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+                      autoFocus
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="label">Função / Cargo *</label>
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="Ex: Vendedor, Analista, Gerente..."
+                      value={form.jobTitle}
+                      onChange={e => setForm(p => ({ ...p, jobTitle: e.target.value }))}
+                    />
+                  </div>
+                  <div className="mb-6">
+                    <label className="label">Email <span className="text-gray-400 font-normal">(opcional)</span></label>
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="email@empresa.com"
+                      value={form.email}
+                      onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button type="button" onClick={closeModal} className="btn-secondary flex-1">Cancelar</button>
+                    <button type="submit" className="btn-primary flex-1" disabled={creating}>
+                      {creating ? 'Criando...' : 'Criar e Gerar Link'}
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">Funcionário criado!</h2>
+                  <p className="text-sm text-gray-500 mt-1">Envie o link abaixo para <strong>{form.name}</strong> fazer o teste DISC</p>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                  <p className="text-xs text-gray-500 mb-1">Link do teste:</p>
+                  <p className="text-sm font-mono text-gray-800 break-all">{createdLink}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(createdLink).catch(() => {})
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 2000)
+                  }}
+                  className="btn-primary w-full mb-3"
+                >
+                  {copied ? '✓ Link copiado!' : '📋 Copiar Link'}
+                </button>
+                <button onClick={closeModal} className="btn-secondary w-full">Fechar</button>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>
