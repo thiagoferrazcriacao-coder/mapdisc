@@ -229,14 +229,14 @@ export default function EmployeeDetailPage() {
             </div>
           )}
 
-          {analysis?.currentFunctionFit < 20 && (
+          {analysis?.currentFunctionFit < 50 && (
             <div className="bg-red-50 border-2 border-red-300 rounded-xl p-5">
               <div className="flex items-start gap-3 mb-4">
                 <span className="text-2xl">🚨</span>
                 <div>
                   <h3 className="font-bold text-red-800 text-lg">Baixa adequação detectada — Sugestão de Realocação</h3>
                   <p className="text-sm text-red-700 mt-1">
-                    A adequação de <strong>{employee.name}</strong> à função atual é de apenas <strong>{analysis.currentFunctionFit}%</strong>.
+                    A adequação de <strong>{employee.name}</strong> à função atual é de <strong>{analysis.currentFunctionFit}%</strong>.
                     {relocationSuggestions.length > 0
                       ? ' Com base no perfil DISC e nas funções cadastradas na empresa, veja as melhores opções de realocação:'
                       : ' Cadastre as funções da sua empresa na aba "Funções e Setores" para receber sugestões de realocação personalizadas.'}

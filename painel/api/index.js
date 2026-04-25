@@ -534,7 +534,7 @@ app.post('/api/disc/submit', async (req, res) => {
     }
     // ── Relocation suggestions when fit < 20% ────────────────────────────────
     let relocationSuggestions = []
-    if (analysis.currentFunctionFit < 20) {
+    if (analysis.currentFunctionFit < 50) {
       try {
         const cfDoc = await dbFindOne('companyFunctions', { companyId: inv.companyId })
         if (cfDoc?.sectors?.length > 0) {
