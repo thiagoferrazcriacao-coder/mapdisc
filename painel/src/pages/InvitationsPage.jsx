@@ -42,12 +42,26 @@ export default function InvitationsPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Deseja cancelar este convite?')) return
+    if (!confirm('Deseja remover este convite? Esta ação não pode ser desfeita.')) return
     try {
       await api.deleteInvitation(id)
-      loadInvitations()
+      setInvitations(prev => prev.filter(i => (i.id || i._id) !== id))
     } catch (err) {
       alert(err.message)
+    }
+  }
+
+  const handleResend = async (inv) => {
+    try {
+      const newInv = await api.createInvitation({ employeeName: inv.employeeName, employeeEmail: inv.employeeEmail })
+      await loadInvitations()
+      // auto-copy the new link
+      const link = `${window.location.origin}/teste?token=${newInv.token}`
+      navigator.clipboard.writeText(link).catch(() => {})
+      setCopiedId('resent_' + newInv.token)
+      setTimeout(() => setCopiedId(null), 3000)
+    } catch (err) {
+      alert('Erro ao reenviar: ' + err.message)
     }
   }
 
@@ -96,16 +110,35 @@ export default function InvitationsPage() {
                   <div className="text-sm text-gray-500">{inv.employeeEmail || 'Sem email'}</div>
                   <div className="text-xs text-gray-400 mt-1">Criado em {formatDate(inv.createdAt)}</div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className={`badge ${status.bg} ${status.text}`}>{status.label}</span>
+
+                  {/* Copiar link — só para pendentes */}
                   {!inv.used && new Date(inv.expiresAt) > new Date() && (
-                    <button onClick={() => copyLink(inv.token)} className="btn-secondary text-xs">
+                    <button onClick={() => copyLink(inv.token)} className="btn-secondary text-xs py-1.5 px-3">
                       {copiedId === inv.token ? '✓ Copiado!' : '📋 Copiar Link'}
                     </button>
                   )}
-                  {!inv.used && new Date(inv.expiresAt) > new Date() && (
-                    <button onClick={() => handleDelete(inv.id || inv._id)} className="text-red-500 hover:text-red-700 text-sm">Cancelar</button>
+
+                  {/* Reenviar — para expirados ou já usados */}
+                  {(inv.used || new Date(inv.expiresAt) < new Date()) && (
+                    <button
+                      onClick={() => handleResend(inv)}
+                      className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
+                      title="Criar novo convite para este funcionário"
+                    >
+                      {copiedId === 'resent_' + inv.token ? '✓ Reenviado! Link copiado' : '↩ Reenviar'}
+                    </button>
                   )}
+
+                  {/* Deletar — sempre visível */}
+                  <button
+                    onClick={() => handleDelete(inv.id || inv._id)}
+                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Remover convite"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
                 </div>
               </div>
             )
