@@ -120,16 +120,14 @@ export default function InvitationsPage() {
                     </button>
                   )}
 
-                  {/* Reenviar — para expirados ou já usados */}
-                  {(inv.used || new Date(inv.expiresAt) < new Date()) && (
-                    <button
-                      onClick={() => handleResend(inv)}
-                      className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
-                      title="Criar novo convite para este funcionário"
-                    >
-                      {copiedId === 'resent_' + inv.token ? '✓ Reenviado! Link copiado' : '↩ Reenviar'}
-                    </button>
-                  )}
+                  {/* Reenviar — disponível em todos os convites */}
+                  <button
+                    onClick={() => handleResend(inv)}
+                    className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
+                    title="Criar novo link para o funcionário repetir o teste"
+                  >
+                    {copiedId === 'resent_' + inv.token ? '✓ Link copiado!' : '↩ Reenviar'}
+                  </button>
 
                   {/* Deletar — sempre visível */}
                   <button
