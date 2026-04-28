@@ -18,9 +18,12 @@ async function readCollection(name) {
     const token = process.env.BLOB_READ_WRITE_TOKEN
     const { blobs } = await list({ prefix: `${BLOB_BASE}/${name}.json`, token })
     if (!blobs || blobs.length === 0) return []
-    const url = blobs[0].downloadUrl || blobs[0].url
+    // Sort by uploadedAt descending to always get the most recent version
+    const latest = blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))[0]
+    const url = latest.downloadUrl || latest.url
     const res = await fetch(url, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      cache: 'no-store'
     })
     if (!res.ok) return []
     return await res.json()

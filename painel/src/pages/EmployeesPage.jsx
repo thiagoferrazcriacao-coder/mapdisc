@@ -160,7 +160,10 @@ export default function EmployeesPage() {
                     try {
                       await api.deleteEmployee(emp.id)
                       setEmployees(prev => prev.filter(x => x.id !== emp.id))
-                    } catch (err) { alert('Erro ao remover funcionário') }
+                    } catch (err) {
+                      alert('Erro ao remover funcionário: ' + (err.message || err))
+                      loadEmployees() // recarrega para mostrar estado real
+                    }
                   }}
                   className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0"
                   title="Remover funcionário"
