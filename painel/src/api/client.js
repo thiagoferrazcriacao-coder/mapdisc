@@ -50,4 +50,5 @@ export const api = {
   getDashboardStats: () => request('GET', '/dashboard/stats'),
   getCompanyFunctions: () => request('GET', '/company/functions'),
   saveCompanyFunctions: (sectors) => request('PUT', '/company/functions', { sectors }),
+  seedDemo: () => request('POST', '/seed-demo'),
 }

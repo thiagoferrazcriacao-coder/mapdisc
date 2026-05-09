@@ -586,6 +586,100 @@ app.get('/api/dashboard/stats', auth, async (req, res) => {
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
+// ── Demo seed ─────────────────────────────────────────────────────────────────
+function makeAvatar(initials, c1, c2) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:${c1}"/><stop offset="100%" style="stop-color:${c2}"/></linearGradient></defs><circle cx="100" cy="100" r="100" fill="url(#g)"/><text x="100" y="128" font-family="Arial,sans-serif" font-size="72" fill="rgba(255,255,255,.95)" text-anchor="middle" font-weight="bold" letter-spacing="-2">${initials}</text></svg>`
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`
+}
+
+app.post('/api/seed-demo', auth, async (req, res) => {
+  try {
+    const companyId = req.companyId
+
+    const DEMO_EMPLOYEES = [
+      { name: 'Ana Oliveira',    jobTitle: 'Vendedora Sênior',          dept: 'Comercial',    cats: ['Vendas'],        pcts: { D:8,  I:44, S:27, C:21 }, avatar: makeAvatar('AO','#F59E0B','#D97706') },
+      { name: 'Carlos Mendes',   jobTitle: 'Analista de TI',            dept: 'Tecnologia',   cats: ['TI'],            pcts: { D:23, I:6,  S:27, C:44 }, avatar: makeAvatar('CM','#3B82F6','#1D4ED8') },
+      { name: 'Beatriz Santos',  jobTitle: 'Gestora de RH',             dept: 'Pessoas',      cats: ['RH'],            pcts: { D:23, I:6,  S:44, C:27 }, avatar: makeAvatar('BS','#10B981','#059669') },
+      { name: 'Roberto Lima',    jobTitle: 'Atendente',                 dept: 'Atendimento',  cats: ['Atendimento'],   pcts: { D:44, I:27, S:6,  C:23 }, avatar: makeAvatar('RL','#EF4444','#B91C1C') },
+      { name: 'Fernanda Costa',  jobTitle: 'Coord. de Marketing',       dept: 'Marketing',    cats: ['Marketing'],     pcts: { D:31, I:35, S:10, C:24 }, avatar: makeAvatar('FC','#F97316','#EA580C') },
+      { name: 'Marcos Silva',    jobTitle: 'Analista Financeiro',       dept: 'Financeiro',   cats: ['Financeiro'],    pcts: { D:15, I:19, S:31, C:35 }, avatar: makeAvatar('MS','#6366F1','#4338CA') },
+    ]
+
+    // Seed company functions so relocation works
+    const DEMO_SECTORS = [
+      { id: uuidv4(), name: 'Comercial',      functions: [
+        { id: uuidv4(), name: 'Vendedor',           discCategory: 'Vendas' },
+        { id: uuidv4(), name: 'Gerente Comercial',  discCategory: 'Liderança' },
+        { id: uuidv4(), name: 'SDR / Pré-Vendas',   discCategory: 'Vendas' },
+      ]},
+      { id: uuidv4(), name: 'Operações',      functions: [
+        { id: uuidv4(), name: 'Supervisor de Equipe',    discCategory: 'Liderança' },
+        { id: uuidv4(), name: 'Auxiliar Operacional',    discCategory: 'Produção' },
+      ]},
+      { id: uuidv4(), name: 'Administrativo', functions: [
+        { id: uuidv4(), name: 'Assistente Administrativo', discCategory: 'Administração' },
+        { id: uuidv4(), name: 'Analista de RH',            discCategory: 'RH' },
+        { id: uuidv4(), name: 'Analista Financeiro',       discCategory: 'Financeiro' },
+      ]},
+    ]
+
+    const existingCf = await dbFindOne('companyFunctions', { companyId })
+    if (existingCf) {
+      await dbUpdateOne('companyFunctions', { companyId }, { sectors: DEMO_SECTORS })
+    } else {
+      await dbInsert('companyFunctions', { _id: uuidv4(), id: uuidv4(), companyId, sectors: DEMO_SECTORS })
+    }
+
+    const created = []
+    for (const d of DEMO_EMPLOYEES) {
+      // Skip if employee with same name already exists
+      const existing = await dbFind('employees', { companyId })
+      if (existing.some(e => e.name === d.name)) continue
+
+      const eid = uuidv4()
+      const emp = {
+        _id: eid, id: eid, companyId,
+        name: d.name, email: `${d.name.toLowerCase().replace(/\s+/g,'.')}@demo.com`,
+        jobTitle: d.jobTitle, department: d.dept,
+        functionCategories: d.cats, jobDescription: '',
+        profilePhoto: d.avatar, createdAt: new Date().toISOString()
+      }
+      await dbInsert('employees', emp)
+
+      const { dominant, secondary } = getDominantType(d.pcts)
+      const analysis = generateAnalysis(d.pcts, d.cats, d.jobTitle, '', d.name)
+
+      // Compute relocation suggestions if fit < 50%
+      let relocationSuggestions = []
+      if (analysis.currentFunctionFit < 50) {
+        const suggestions = []
+        for (const sector of DEMO_SECTORS) {
+          for (const fn of sector.functions) {
+            if (fn.discCategory && FUNCTION_PROFILES[fn.discCategory]) {
+              suggestions.push({ functionName: fn.name, sectorName: sector.name, fitPercentage: calculateFit(d.pcts, fn.discCategory) })
+            }
+          }
+        }
+        relocationSuggestions = suggestions.sort((a, b) => b.fitPercentage - a.fitPercentage).slice(0, 3)
+      }
+
+      const rid = uuidv4()
+      await dbInsert('discResults', {
+        _id: rid, id: rid, employeeId: eid, companyId,
+        invitationId: null, responses: [],
+        scores: { D:0, I:0, S:0, C:0 },
+        percentages: d.pcts,
+        dominantType: dominant, secondaryType: secondary,
+        analysis, relocationSuggestions,
+        completedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
+      })
+      created.push(d.name)
+    }
+
+    return res.json({ ok: true, created, skipped: DEMO_EMPLOYEES.length - created.length })
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
 // ── Company functions routes ──────────────────────────────────────────────────
 app.get('/api/company/functions', auth, async (req, res) => {
   try {

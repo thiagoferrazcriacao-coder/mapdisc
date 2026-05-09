@@ -136,6 +136,77 @@ export default function SettingsPage() {
           </form>
         </div>
       </div>
+
+      <DemoCard />
+    </div>
+  )
+}
+
+function DemoCard() {
+  const [status, setStatus] = useState('idle') // idle | loading | done | error
+  const [result, setResult] = useState(null)
+
+  const handleSeed = async () => {
+    if (!window.confirm('Isso vai adicionar 6 funcionários fictícios e setores de demonstração na sua conta. Continuar?')) return
+    setStatus('loading')
+    try {
+      const data = await api.seedDemo()
+      setResult(data)
+      setStatus('done')
+    } catch (err) {
+      setResult({ error: err.message })
+      setStatus('error')
+    }
+  }
+
+  return (
+    <div className="card mt-6 border-2 border-dashed border-purple-200 bg-purple-50">
+      <div className="flex items-start gap-4">
+        <div className="text-3xl">🎬</div>
+        <div className="flex-1">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">Dados de Demonstração</h2>
+          <p className="text-sm text-gray-600 mb-3">
+            Popula a plataforma com <strong>6 funcionários fictícios</strong> completos — perfis DISC calculados, fotos, funções, setores e sugestões de realocação — prontos para demonstração em vídeo.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4 text-xs text-gray-600">
+            {[
+              { name: 'Ana Oliveira', role: 'Vendedora Sênior', disc: 'I', color: '#F59E0B' },
+              { name: 'Carlos Mendes', role: 'Analista de TI', disc: 'C', color: '#3B82F6' },
+              { name: 'Beatriz Santos', role: 'Gestora de RH', disc: 'S', color: '#10B981' },
+              { name: 'Roberto Lima', role: 'Atendente', disc: 'D', color: '#EF4444' },
+              { name: 'Fernanda Costa', role: 'Coord. Marketing', disc: 'I', color: '#F97316' },
+              { name: 'Marcos Silva', role: 'Analista Financeiro', disc: 'C', color: '#6366F1' },
+            ].map(p => (
+              <div key={p.name} className="flex items-center gap-2 bg-white rounded-lg px-2 py-1.5 border border-gray-100">
+                <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ background: p.color }}>{p.disc}</span>
+                <div>
+                  <div className="font-medium text-gray-800">{p.name}</div>
+                  <div className="text-gray-400">{p.role}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {status === 'done' && result && (
+            <div className="bg-green-50 border border-green-200 text-green-800 rounded-lg p-3 mb-3 text-sm">
+              ✅ {result.created?.length > 0 ? `${result.created.length} funcionários criados: ${result.created.join(', ')}` : 'Todos os funcionários já existiam na conta.'}
+              {result.skipped > 0 && ` (${result.skipped} já existia${result.skipped > 1 ? 'm' : ''})`}
+            </div>
+          )}
+          {status === 'error' && result && (
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-3 text-sm">Erro: {result.error}</div>
+          )}
+
+          <button onClick={handleSeed} className="btn-primary" disabled={status === 'loading'}>
+            {status === 'loading' ? (
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                Carregando dados...
+              </span>
+            ) : status === 'done' ? '✓ Dados carregados!' : '🎬 Carregar Dados Demo'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
