@@ -605,36 +605,39 @@ app.post('/api/seed-demo', auth, async (req, res) => {
       { name: 'Marcos Silva',    jobTitle: 'Analista Financeiro',       dept: 'Financeiro',   cats: ['Financeiro'],    pcts: { D:15, I:19, S:31, C:35 }, avatar: makeAvatar('MS','#6366F1','#4338CA') },
     ]
 
-    // Seed company functions so relocation works
     const DEMO_SECTORS = [
       { id: uuidv4(), name: 'Comercial',      functions: [
-        { id: uuidv4(), name: 'Vendedor',           discCategory: 'Vendas' },
-        { id: uuidv4(), name: 'Gerente Comercial',  discCategory: 'Liderança' },
-        { id: uuidv4(), name: 'SDR / Pré-Vendas',   discCategory: 'Vendas' },
+        { id: uuidv4(), name: 'Vendedor',              discCategory: 'Vendas' },
+        { id: uuidv4(), name: 'Gerente Comercial',     discCategory: 'Liderança' },
+        { id: uuidv4(), name: 'SDR / Pré-Vendas',      discCategory: 'Vendas' },
       ]},
       { id: uuidv4(), name: 'Operações',      functions: [
-        { id: uuidv4(), name: 'Supervisor de Equipe',    discCategory: 'Liderança' },
-        { id: uuidv4(), name: 'Auxiliar Operacional',    discCategory: 'Produção' },
+        { id: uuidv4(), name: 'Supervisor de Equipe',  discCategory: 'Liderança' },
+        { id: uuidv4(), name: 'Auxiliar Operacional',  discCategory: 'Produção' },
       ]},
       { id: uuidv4(), name: 'Administrativo', functions: [
         { id: uuidv4(), name: 'Assistente Administrativo', discCategory: 'Administração' },
         { id: uuidv4(), name: 'Analista de RH',            discCategory: 'RH' },
-        { id: uuidv4(), name: 'Analista Financeiro',       discCategory: 'Financeiro' },
+        { id: uuidv4(), name: 'Analista Financeiro Jr',    discCategory: 'Financeiro' },
       ]},
     ]
 
-    const existingCf = await dbFindOne('companyFunctions', { companyId })
-    if (existingCf) {
-      await dbUpdateOne('companyFunctions', { companyId }, { sectors: DEMO_SECTORS })
-    } else {
-      await dbInsert('companyFunctions', { _id: uuidv4(), id: uuidv4(), companyId, sectors: DEMO_SECTORS })
-    }
+    // ── Read all collections ONCE ────────────────────────────────────────────
+    const [allEmployees, allResults, allCompanyFunctions] = await Promise.all([
+      readCollection('employees'),
+      readCollection('discResults'),
+      readCollection('companyFunctions')
+    ])
 
+    // ── Prepare new employees and results in memory ──────────────────────────
+    const newEmps = []
+    const newResults = []
     const created = []
+    const skipped = []
+
     for (const d of DEMO_EMPLOYEES) {
-      // Skip if employee with same name already exists
-      const existing = await dbFind('employees', { companyId })
-      if (existing.some(e => e.name === d.name)) continue
+      const alreadyExists = allEmployees.some(e => e.companyId === companyId && e.name === d.name)
+      if (alreadyExists) { skipped.push(d.name); continue }
 
       const eid = uuidv4()
       const emp = {
@@ -644,12 +647,11 @@ app.post('/api/seed-demo', auth, async (req, res) => {
         functionCategories: d.cats, jobDescription: '',
         profilePhoto: d.avatar, createdAt: new Date().toISOString()
       }
-      await dbInsert('employees', emp)
+      newEmps.push(emp)
 
       const { dominant, secondary } = getDominantType(d.pcts)
       const analysis = generateAnalysis(d.pcts, d.cats, d.jobTitle, '', d.name)
 
-      // Compute relocation suggestions if fit < 50%
       let relocationSuggestions = []
       if (analysis.currentFunctionFit < 50) {
         const suggestions = []
@@ -664,19 +666,37 @@ app.post('/api/seed-demo', auth, async (req, res) => {
       }
 
       const rid = uuidv4()
-      await dbInsert('discResults', {
+      newResults.push({
         _id: rid, id: rid, employeeId: eid, companyId,
         invitationId: null, responses: [],
         scores: { D:0, I:0, S:0, C:0 },
         percentages: d.pcts,
         dominantType: dominant, secondaryType: secondary,
         analysis, relocationSuggestions,
-        completedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
+        completedAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString()
       })
       created.push(d.name)
     }
 
-    return res.json({ ok: true, created, skipped: DEMO_EMPLOYEES.length - created.length })
+    // ── Write all collections ONCE (batch) ───────────────────────────────────
+    const writes = []
+    if (newEmps.length > 0) {
+      writes.push(writeCollection('employees', [...allEmployees, ...newEmps]))
+      writes.push(writeCollection('discResults', [...allResults, ...newResults]))
+    }
+
+    // Upsert company functions
+    const cfIdx = allCompanyFunctions.findIndex(c => c.companyId === companyId)
+    if (cfIdx >= 0) {
+      allCompanyFunctions[cfIdx] = { ...allCompanyFunctions[cfIdx], sectors: DEMO_SECTORS }
+    } else {
+      allCompanyFunctions.push({ _id: uuidv4(), id: uuidv4(), companyId, sectors: DEMO_SECTORS })
+    }
+    writes.push(writeCollection('companyFunctions', allCompanyFunctions))
+
+    await Promise.all(writes)
+
+    return res.json({ ok: true, created, skipped })
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
