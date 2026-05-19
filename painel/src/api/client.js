@@ -21,14 +21,20 @@ async function request(method, path, body) {
     body: body !== undefined ? JSON.stringify(body) : undefined
   })
 
+  const data = await res.json().catch(() => ({}))
+
   if (res.status === 401) {
+    // Rotas de autenticação: apenas lança o erro (não redireciona)
+    if (path.startsWith('/auth/login') || path.startsWith('/auth/register')) {
+      throw new Error(data.error || 'Credenciais inválidas')
+    }
+    // Rotas protegidas: desloga e redireciona para login
     localStorage.removeItem('mapdisc_token')
     localStorage.removeItem('mapdisc_user')
     window.location.href = '/login'
     return
   }
 
-  const data = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`)
   return normalizeId(data)
 }
