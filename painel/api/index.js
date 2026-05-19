@@ -721,6 +721,17 @@ app.put('/api/company/functions', auth, async (req, res) => {
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
+// ── Diagnóstico temporário ────────────────────────────────────────────────────
+app.get('/api/debug-blob', async (req, res) => {
+  const token = process.env.BLOB_READ_WRITE_TOKEN
+  try {
+    const { blobs } = await list({ prefix: 'db/', token })
+    return res.json({ ok: true, hasToken: !!token, tokenPrefix: token?.substring(0,20), blobCount: blobs.length, blobs: blobs.map(b=>b.pathname) })
+  } catch (err) {
+    return res.json({ ok: false, hasToken: !!token, tokenPrefix: token?.substring(0,20), error: err.message })
+  }
+})
+
 app.use((err, req, res, next) => { console.error(err.stack); res.status(500).json({ error: 'Erro interno do servidor' }) })
 
 export default app
