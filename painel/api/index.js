@@ -3,88 +3,31 @@ import cors from 'cors'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
-import { put, head, list } from '@vercel/blob'
+import mongoose from 'mongoose'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mapdisc-secret-change-me'
 
-// ── Blob DB helpers ───────────────────────────────────────────────────────────
-// Each collection is a JSON array stored as a single blob file.
-// We use a versioned path so we can overwrite deterministically.
-
-const BLOB_BASE = 'db'
-
-async function readCollection(name) {
-  try {
-    const token = process.env.BLOB_READ_WRITE_TOKEN
-    const { blobs } = await list({ prefix: `${BLOB_BASE}/${name}.json`, token })
-    if (!blobs || blobs.length === 0) return []
-    // Sort by uploadedAt descending to always get the most recent version
-    const latest = blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))[0]
-    const url = latest.downloadUrl || latest.url
-    const res = await fetch(url, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      cache: 'no-store'
-    })
-    if (!res.ok) return []
-    return await res.json()
-  } catch {
-    return []
-  }
-}
-
-async function writeCollection(name, data) {
-  const token = process.env.BLOB_READ_WRITE_TOKEN
-  const content = JSON.stringify(data)
-  await put(`${BLOB_BASE}/${name}.json`, content, {
-    access: 'private',
-    addRandomSuffix: false,
-    contentType: 'application/json',
-    allowOverwrite: true,
-    token
+// ── MongoDB connection (serverless-friendly cache) ────────────────────────────
+let _conn = null
+async function connectDB() {
+  if (_conn && mongoose.connection.readyState === 1) return _conn
+  _conn = await mongoose.connect(process.env.MONGODB_URI, {
+    bufferCommands: false,
+    serverSelectionTimeoutMS: 5000,
   })
+  return _conn
 }
 
-// ── Simple CRUD helpers ───────────────────────────────────────────────────────
-async function dbFind(col, query = {}) {
-  const data = await readCollection(col)
-  return data.filter(item => Object.entries(query).every(([k, v]) => item[k] === v))
-}
+// ── Minimal schemas (strict:false → aceita qualquer campo) ────────────────────
+const schemaOpts = { _id: false, strict: false, versionKey: false }
+const baseSchema = (extra = {}) =>
+  new mongoose.Schema({ _id: { type: String, default: () => uuidv4() }, ...extra }, schemaOpts)
 
-async function dbFindOne(col, query = {}) {
-  const results = await dbFind(col, query)
-  return results[0] || null
-}
-
-async function dbInsert(col, doc) {
-  const data = await readCollection(col)
-  data.push(doc)
-  await writeCollection(col, data)
-  return doc
-}
-
-async function dbUpdateOne(col, query, update) {
-  const data = await readCollection(col)
-  const idx = data.findIndex(item => Object.entries(query).every(([k, v]) => item[k] === v))
-  if (idx === -1) return null
-  data[idx] = { ...data[idx], ...update }
-  await writeCollection(col, data)
-  return data[idx]
-}
-
-async function dbDeleteOne(col, query) {
-  const data = await readCollection(col)
-  const idx = data.findIndex(item => Object.entries(query).every(([k, v]) => item[k] === v))
-  if (idx === -1) return null
-  const [removed] = data.splice(idx, 1)
-  await writeCollection(col, data)
-  return removed
-}
-
-async function dbDeleteMany(col, query) {
-  const data = await readCollection(col)
-  const kept = data.filter(item => !Object.entries(query).every(([k, v]) => item[k] === v))
-  await writeCollection(col, kept)
-}
+const Company         = mongoose.models.Company         || mongoose.model('Company',         baseSchema())
+const Employee        = mongoose.models.Employee        || mongoose.model('Employee',        baseSchema())
+const Invitation      = mongoose.models.Invitation      || mongoose.model('Invitation',      baseSchema())
+const DISCResult      = mongoose.models.DISCResult      || mongoose.model('DISCResult',      baseSchema())
+const CompanyFunction = mongoose.models.CompanyFunction || mongoose.model('CompanyFunction', baseSchema())
 
 // ── Auth middleware ───────────────────────────────────────────────────────────
 function auth(req, res, next) {
@@ -382,14 +325,15 @@ app.use(express.json({ limit: '10mb' }))
 // ── Auth routes ───────────────────────────────────────────────────────────────
 app.post('/api/auth/register', async (req, res) => {
   try {
+    await connectDB()
     const { name, email, password, phone, industry, teamSize } = req.body
     if (!name || !email || !password) return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' })
-    const existing = await dbFindOne('companies', { email: email.toLowerCase() })
+    const existing = await Company.findOne({ email: email.toLowerCase() }).lean()
     if (existing) return res.status(400).json({ error: 'Email já cadastrado' })
     const id = uuidv4()
     const hashedPassword = await bcrypt.hash(password, 12)
     const company = { _id: id, id, name, email: email.toLowerCase(), phone, industry, teamSize, password: hashedPassword, createdAt: new Date().toISOString() }
-    await dbInsert('companies', company)
+    await Company.create(company)
     const token = jwt.sign({ id }, JWT_SECRET, { expiresIn: '7d' })
     const { password: _, ...user } = company
     return res.status(201).json({ token, user })
@@ -398,9 +342,10 @@ app.post('/api/auth/register', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
   try {
+    await connectDB()
     const { email, password } = req.body
     if (!email || !password) return res.status(400).json({ error: 'Email e senha são obrigatórios' })
-    const company = await dbFindOne('companies', { email: email.toLowerCase() })
+    const company = await Company.findOne({ email: email.toLowerCase() }).lean()
     if (!company) return res.status(401).json({ error: 'Credenciais inválidas' })
     const valid = await bcrypt.compare(password, company.password)
     if (!valid) return res.status(401).json({ error: 'Credenciais inválidas' })
@@ -412,7 +357,8 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.get('/api/auth/me', auth, async (req, res) => {
   try {
-    const company = await dbFindOne('companies', { _id: req.companyId })
+    await connectDB()
+    const company = await Company.findOne({ _id: req.companyId }).lean()
     if (!company) return res.status(404).json({ error: 'Empresa não encontrada' })
     const { password, ...user } = company
     return res.json(user)
@@ -422,25 +368,28 @@ app.get('/api/auth/me', auth, async (req, res) => {
 // ── Invitation routes ─────────────────────────────────────────────────────────
 app.post('/api/invitations', auth, async (req, res) => {
   try {
+    await connectDB()
     const { employeeName, employeeEmail, employeeId } = req.body
     if (!employeeName) return res.status(400).json({ error: 'Nome obrigatório' })
     const id = uuidv4(); const token = uuidv4()
     const invitation = { _id: id, id, companyId: req.companyId, token, employeeName, employeeEmail: employeeEmail?.toLowerCase() || '', employeeId: employeeId || null, used: false, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), usedAt: null, createdAt: new Date().toISOString() }
-    await dbInsert('invitations', invitation)
+    await Invitation.create(invitation)
     return res.status(201).json(invitation)
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
 app.get('/api/invitations', auth, async (req, res) => {
   try {
-    const invitations = await dbFind('invitations', { companyId: req.companyId })
+    await connectDB()
+    const invitations = await Invitation.find({ companyId: req.companyId }).lean()
     return res.json(invitations)
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
 app.delete('/api/invitations/:id', auth, async (req, res) => {
   try {
-    const removed = await dbDeleteOne('invitations', { _id: req.params.id, companyId: req.companyId })
+    await connectDB()
+    const removed = await Invitation.findOneAndDelete({ _id: req.params.id, companyId: req.companyId }).lean()
     if (!removed) return res.status(404).json({ error: 'Convite não encontrado' })
     return res.json({ message: 'Convite cancelado' })
   } catch (err) { return res.status(500).json({ error: err.message }) }
@@ -448,12 +397,12 @@ app.delete('/api/invitations/:id', auth, async (req, res) => {
 
 app.get('/api/invitations/public/:token', async (req, res) => {
   try {
-    const invitations = await dbFind('invitations', { token: req.params.token, used: false })
-    const inv = invitations.find(i => new Date(i.expiresAt) > new Date())
-    if (!inv) return res.status(404).json({ error: 'Convite inválido ou expirado' })
+    await connectDB()
+    const inv = await Invitation.findOne({ token: req.params.token, used: false }).lean()
+    if (!inv || new Date(inv.expiresAt) <= new Date()) return res.status(404).json({ error: 'Convite inválido ou expirado' })
     let jobTitle = ''
     if (inv.employeeId) {
-      const emp = await dbFindOne('employees', { _id: inv.employeeId })
+      const emp = await Employee.findOne({ _id: inv.employeeId }).lean()
       jobTitle = emp?.jobTitle || ''
     }
     return res.json({ employeeName: inv.employeeName, employeeEmail: inv.employeeEmail, companyId: inv.companyId, employeeId: inv.employeeId || null, jobTitle })
@@ -463,19 +412,23 @@ app.get('/api/invitations/public/:token', async (req, res) => {
 // ── Employee routes ───────────────────────────────────────────────────────────
 app.post('/api/employees', auth, async (req, res) => {
   try {
+    await connectDB()
     const { name, jobTitle, email, department, functionCategories } = req.body
     if (!name) return res.status(400).json({ error: 'Nome obrigatório' })
     const id = uuidv4()
     const emp = { _id: id, id, companyId: req.companyId, name, email: email?.toLowerCase() || '', jobTitle: jobTitle || '', jobDescription: '', department: department || '', functionCategories: functionCategories || (jobTitle ? [jobTitle] : []), profilePhoto: null, createdAt: new Date().toISOString() }
-    await dbInsert('employees', emp)
+    await Employee.create(emp)
     return res.status(201).json(emp)
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
 app.get('/api/employees', auth, async (req, res) => {
   try {
-    const employees = await dbFind('employees', { companyId: req.companyId })
-    const results = await dbFind('discResults', { companyId: req.companyId })
+    await connectDB()
+    const [employees, results] = await Promise.all([
+      Employee.find({ companyId: req.companyId }).lean(),
+      DISCResult.find({ companyId: req.companyId }).lean()
+    ])
     const rm = {}; results.forEach(r => { rm[r.employeeId] = r })
     return res.json(employees.map(e => ({ ...e, discResult: rm[e._id] || null })))
   } catch (err) { return res.status(500).json({ error: err.message }) }
@@ -483,18 +436,20 @@ app.get('/api/employees', auth, async (req, res) => {
 
 app.get('/api/employees/:id', auth, async (req, res) => {
   try {
-    const emp = await dbFindOne('employees', { _id: req.params.id, companyId: req.companyId })
+    await connectDB()
+    const emp = await Employee.findOne({ _id: req.params.id, companyId: req.companyId }).lean()
     if (!emp) return res.status(404).json({ error: 'Funcionário não encontrado' })
-    const dr = await dbFindOne('discResults', { employeeId: emp._id })
+    const dr = await DISCResult.findOne({ employeeId: emp._id }).lean()
     return res.json({ ...emp, discResult: dr || null })
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
 app.delete('/api/employees/:id', auth, async (req, res) => {
   try {
-    const removed = await dbDeleteOne('employees', { _id: req.params.id, companyId: req.companyId })
+    await connectDB()
+    const removed = await Employee.findOneAndDelete({ _id: req.params.id, companyId: req.companyId }).lean()
     if (!removed) return res.status(404).json({ error: 'Funcionário não encontrado' })
-    await dbDeleteMany('discResults', { employeeId: req.params.id })
+    await DISCResult.deleteMany({ employeeId: req.params.id })
     return res.json({ message: 'Funcionário removido' })
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
@@ -502,27 +457,26 @@ app.delete('/api/employees/:id', auth, async (req, res) => {
 // ── DISC submit ───────────────────────────────────────────────────────────────
 app.post('/api/disc/submit', async (req, res) => {
   try {
+    await connectDB()
     const { invitationToken, employeeData, responses } = req.body
     if (!invitationToken || !responses || responses.length !== 24) return res.status(400).json({ error: 'Dados incompletos' })
-    const invitations = await dbFind('invitations', { token: invitationToken, used: false })
-    const inv = invitations.find(i => new Date(i.expiresAt) > new Date())
-    if (!inv) return res.status(404).json({ error: 'Convite inválido ou expirado' })
+    const inv = await Invitation.findOne({ token: invitationToken, used: false }).lean()
+    if (!inv || new Date(inv.expiresAt) <= new Date()) return res.status(404).json({ error: 'Convite inválido ou expirado' })
     const scores = calculateDISCScores(responses)
     const percentages = calculatePercentages(scores)
     const { dominant, secondary } = getDominantType(percentages)
     const empName = employeeData?.name || inv.employeeName || ''
     const analysis = generateAnalysis(percentages, employeeData?.functionCategories || [], employeeData?.jobTitle || '', employeeData?.jobDescription || '', empName)
     const targetEmail = (employeeData?.email || inv.employeeEmail || '').toLowerCase()
-    // Find pre-created employee by employeeId (from panel creation) or by email
     let emp = inv.employeeId
-      ? await dbFindOne('employees', { _id: inv.employeeId, companyId: inv.companyId })
-      : (targetEmail ? await dbFindOne('employees', { email: targetEmail, companyId: inv.companyId }) : null)
+      ? await Employee.findOne({ _id: inv.employeeId, companyId: inv.companyId }).lean()
+      : (targetEmail ? await Employee.findOne({ email: targetEmail, companyId: inv.companyId }).lean() : null)
     if (!emp) {
       const eid = uuidv4()
-      emp = { _id: eid, id: eid, companyId: inv.companyId, name: empName, email: targetEmail, phone: employeeData?.phone || '', department: employeeData?.department || '', jobTitle: employeeData?.jobTitle || '', jobDescription: employeeData?.jobDescription || '', functionCategories: employeeData?.functionCategories || [], profilePhoto: employeeData?.profilePhoto || null, createdAt: new Date().toISOString() }
-      await dbInsert('employees', emp)
+      const newEmp = { _id: eid, id: eid, companyId: inv.companyId, name: empName, email: targetEmail, phone: employeeData?.phone || '', department: employeeData?.department || '', jobTitle: employeeData?.jobTitle || '', jobDescription: employeeData?.jobDescription || '', functionCategories: employeeData?.functionCategories || [], profilePhoto: employeeData?.profilePhoto || null, createdAt: new Date().toISOString() }
+      await Employee.create(newEmp)
+      emp = newEmp
     } else {
-      // Update pre-created employee with data filled in by the employee during the test
       const updates = {}
       if (employeeData?.phone) updates.phone = employeeData.phone
       if (employeeData?.department) updates.department = employeeData.department
@@ -531,15 +485,15 @@ app.post('/api/disc/submit', async (req, res) => {
       if (employeeData?.functionCategories?.length) updates.functionCategories = employeeData.functionCategories
       if (employeeData?.profilePhoto) updates.profilePhoto = employeeData.profilePhoto
       if (Object.keys(updates).length > 0) {
-        await dbUpdateOne('employees', { _id: emp._id }, updates)
+        await Employee.updateOne({ _id: emp._id }, { $set: updates })
         emp = { ...emp, ...updates }
       }
     }
-    // ── Relocation suggestions when fit < 20% ────────────────────────────────
+    // ── Relocation suggestions when fit < 50% ───────────────────────────────
     let relocationSuggestions = []
     if (analysis.currentFunctionFit < 50) {
       try {
-        const cfDoc = await dbFindOne('companyFunctions', { companyId: inv.companyId })
+        const cfDoc = await CompanyFunction.findOne({ companyId: inv.companyId }).lean()
         if (cfDoc?.sectors?.length > 0) {
           const suggestions = []
           for (const sector of cfDoc.sectors) {
@@ -554,8 +508,8 @@ app.post('/api/disc/submit', async (req, res) => {
       } catch (_) {}
     }
     const rid = uuidv4()
-    await dbInsert('discResults', { _id: rid, id: rid, employeeId: emp._id, companyId: inv.companyId, invitationId: inv._id, responses, scores, percentages, dominantType: dominant, secondaryType: secondary, analysis, relocationSuggestions, completedAt: new Date().toISOString() })
-    await dbUpdateOne('invitations', { _id: inv._id }, { used: true, usedAt: new Date().toISOString() })
+    await DISCResult.create({ _id: rid, id: rid, employeeId: emp._id, companyId: inv.companyId, invitationId: inv._id, responses, scores, percentages, dominantType: dominant, secondaryType: secondary, analysis, relocationSuggestions, completedAt: new Date().toISOString() })
+    await Invitation.updateOne({ _id: inv._id }, { $set: { used: true, usedAt: new Date().toISOString() } })
     return res.json({ percentages, dominantType: dominant, secondaryType: secondary, description: TYPE_DESCRIPTIONS[dominant].description, analysis: { currentFunctionFit: analysis.currentFunctionFit, currentFunctionName: analysis.currentFunctionName, recommendations: analysis.recommendations, improvementTips: analysis.improvementTips, strengthsInCurrentRole: analysis.strengthsInCurrentRole, challengesInCurrentRole: analysis.challengesInCurrentRole, profileDetails: analysis.profileDetails }, relocationSuggestions })
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
@@ -563,10 +517,11 @@ app.post('/api/disc/submit', async (req, res) => {
 // ── Dashboard stats ───────────────────────────────────────────────────────────
 app.get('/api/dashboard/stats', auth, async (req, res) => {
   try {
+    await connectDB()
     const [employees, results, invitations] = await Promise.all([
-      dbFind('employees', { companyId: req.companyId }),
-      dbFind('discResults', { companyId: req.companyId }),
-      dbFind('invitations', { companyId: req.companyId })
+      Employee.find({ companyId: req.companyId }).lean(),
+      DISCResult.find({ companyId: req.companyId }).lean(),
+      Invitation.find({ companyId: req.companyId }).lean()
     ])
     const pending = invitations.filter(i => !i.used && new Date(i.expiresAt) > new Date()).length
     const discDistribution = { D: 0, I: 0, S: 0, C: 0 }
@@ -594,6 +549,7 @@ function makeAvatar(initials, c1, c2) {
 
 app.post('/api/seed-demo', auth, async (req, res) => {
   try {
+    await connectDB()
     const companyId = req.companyId
 
     const DEMO_EMPLOYEES = [
@@ -622,21 +578,11 @@ app.post('/api/seed-demo', auth, async (req, res) => {
       ]},
     ]
 
-    // ── Read all collections ONCE ────────────────────────────────────────────
-    const [allEmployees, allResults, allCompanyFunctions] = await Promise.all([
-      readCollection('employees'),
-      readCollection('discResults'),
-      readCollection('companyFunctions')
-    ])
-
-    // ── Prepare new employees and results in memory ──────────────────────────
-    const newEmps = []
-    const newResults = []
     const created = []
     const skipped = []
 
     for (const d of DEMO_EMPLOYEES) {
-      const alreadyExists = allEmployees.some(e => e.companyId === companyId && e.name === d.name)
+      const alreadyExists = await Employee.findOne({ companyId, name: d.name }).lean()
       if (alreadyExists) { skipped.push(d.name); continue }
 
       const eid = uuidv4()
@@ -647,7 +593,7 @@ app.post('/api/seed-demo', auth, async (req, res) => {
         functionCategories: d.cats, jobDescription: '',
         profilePhoto: d.avatar, createdAt: new Date().toISOString()
       }
-      newEmps.push(emp)
+      await Employee.create(emp)
 
       const { dominant, secondary } = getDominantType(d.pcts)
       const analysis = generateAnalysis(d.pcts, d.cats, d.jobTitle, '', d.name)
@@ -666,7 +612,7 @@ app.post('/api/seed-demo', auth, async (req, res) => {
       }
 
       const rid = uuidv4()
-      newResults.push({
+      await DISCResult.create({
         _id: rid, id: rid, employeeId: eid, companyId,
         invitationId: null, responses: [],
         scores: { D:0, I:0, S:0, C:0 },
@@ -678,23 +624,12 @@ app.post('/api/seed-demo', auth, async (req, res) => {
       created.push(d.name)
     }
 
-    // ── Write all collections ONCE (batch) ───────────────────────────────────
-    const writes = []
-    if (newEmps.length > 0) {
-      writes.push(writeCollection('employees', [...allEmployees, ...newEmps]))
-      writes.push(writeCollection('discResults', [...allResults, ...newResults]))
-    }
-
     // Upsert company functions
-    const cfIdx = allCompanyFunctions.findIndex(c => c.companyId === companyId)
-    if (cfIdx >= 0) {
-      allCompanyFunctions[cfIdx] = { ...allCompanyFunctions[cfIdx], sectors: DEMO_SECTORS }
-    } else {
-      allCompanyFunctions.push({ _id: uuidv4(), id: uuidv4(), companyId, sectors: DEMO_SECTORS })
-    }
-    writes.push(writeCollection('companyFunctions', allCompanyFunctions))
-
-    await Promise.all(writes)
+    await CompanyFunction.findOneAndUpdate(
+      { companyId },
+      { $set: { sectors: DEMO_SECTORS } },
+      { upsert: true }
+    )
 
     return res.json({ ok: true, created, skipped })
   } catch (err) { return res.status(500).json({ error: err.message }) }
@@ -703,33 +638,23 @@ app.post('/api/seed-demo', auth, async (req, res) => {
 // ── Company functions routes ──────────────────────────────────────────────────
 app.get('/api/company/functions', auth, async (req, res) => {
   try {
-    const doc = await dbFindOne('companyFunctions', { companyId: req.companyId })
+    await connectDB()
+    const doc = await CompanyFunction.findOne({ companyId: req.companyId }).lean()
     return res.json(doc ? doc.sectors : [])
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
 app.put('/api/company/functions', auth, async (req, res) => {
   try {
+    await connectDB()
     const { sectors } = req.body
-    const existing = await dbFindOne('companyFunctions', { companyId: req.companyId })
-    if (existing) {
-      await dbUpdateOne('companyFunctions', { companyId: req.companyId }, { sectors: sectors || [] })
-    } else {
-      await dbInsert('companyFunctions', { _id: uuidv4(), id: uuidv4(), companyId: req.companyId, sectors: sectors || [] })
-    }
+    await CompanyFunction.findOneAndUpdate(
+      { companyId: req.companyId },
+      { $set: { sectors: sectors || [] } },
+      { upsert: true }
+    )
     return res.json({ sectors: sectors || [] })
   } catch (err) { return res.status(500).json({ error: err.message }) }
-})
-
-// ── Diagnóstico temporário ────────────────────────────────────────────────────
-app.get('/api/debug-blob', async (req, res) => {
-  const token = process.env.BLOB_READ_WRITE_TOKEN
-  try {
-    const { blobs } = await list({ prefix: 'db/', token })
-    return res.json({ ok: true, hasToken: !!token, tokenPrefix: token?.substring(0,20), blobCount: blobs.length, blobs: blobs.map(b=>b.pathname) })
-  } catch (err) {
-    return res.json({ ok: false, hasToken: !!token, tokenPrefix: token?.substring(0,20), error: err.message })
-  }
 })
 
 app.use((err, req, res, next) => { console.error(err.stack); res.status(500).json({ error: 'Erro interno do servidor' }) })
