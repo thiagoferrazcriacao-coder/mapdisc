@@ -657,6 +657,73 @@ app.put('/api/company/functions', auth, async (req, res) => {
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
+// ── Backup automático ─────────────────────────────────────────────────────────
+app.post('/api/cron/backup', async (req, res) => {
+  try {
+    // Proteção: só aceita chamadas com o token secreto
+    const secret = req.headers['x-cron-secret'] || req.query.secret
+    if (secret !== process.env.CRON_SECRET) {
+      return res.status(401).json({ error: 'Não autorizado' })
+    }
+
+    await connectDB()
+
+    // Lê todos os dados do banco mapdisc
+    const [companies, employees, invitations, discResults, companyFunctions] = await Promise.all([
+      Company.find({}).lean(),
+      Employee.find({}).lean(),
+      Invitation.find({}).lean(),
+      DISCResult.find({}).lean(),
+      CompanyFunction.find({}).lean(),
+    ])
+
+    // Salva snapshot no banco "backups" (mesmo cluster, banco separado)
+    const backupDb = mongoose.connection.useDb('backups', { useCache: true })
+    const Snapshot = backupDb.models.Snapshot || backupDb.model('Snapshot',
+      new mongoose.Schema({ project: String, date: String, createdAt: Date, data: mongoose.Schema.Types.Mixed }, { strict: false })
+    )
+
+    const today = new Date().toISOString().slice(0, 10)
+
+    // Evita duplicata: remove snapshot do mesmo dia se já existir
+    await Snapshot.deleteOne({ project: 'mapdisc', date: today })
+
+    // Salva novo snapshot
+    await Snapshot.create({
+      project: 'mapdisc',
+      date: today,
+      createdAt: new Date(),
+      data: { companies, employees, invitations, discResults, companyFunctions }
+    })
+
+    // Apaga snapshots com mais de 7 dias
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - 7)
+    const oldDates = []
+    for (let i = 8; i <= 60; i++) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      oldDates.push(d.toISOString().slice(0, 10))
+    }
+    await Snapshot.deleteMany({ project: 'mapdisc', date: { $in: oldDates } })
+
+    return res.json({
+      ok: true,
+      date: today,
+      counts: {
+        companies: companies.length,
+        employees: employees.length,
+        invitations: invitations.length,
+        discResults: discResults.length,
+        companyFunctions: companyFunctions.length,
+      }
+    })
+  } catch (err) {
+    console.error('[backup] Erro:', err.message)
+    return res.status(500).json({ error: err.message })
+  }
+})
+
 app.use((err, req, res, next) => { console.error(err.stack); res.status(500).json({ error: 'Erro interno do servidor' }) })
 
 export default app
