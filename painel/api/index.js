@@ -352,7 +352,7 @@ app.post('/api/auth/register', async (req, res) => {
     // Envia o código por email
     try {
       await resend.emails.send({
-        from: 'MapDISC <onboarding@resend.dev>',
+        from: 'MapDISC <noreply@mapdisc.com.br>',
         to: email.toLowerCase(),
         subject: `${code} — Seu código de verificação MapDISC`,
         html: `
@@ -432,7 +432,7 @@ app.post('/api/auth/resend-code', async (req, res) => {
 
     try {
       await resend.emails.send({
-        from: 'MapDISC <onboarding@resend.dev>',
+        from: 'MapDISC <noreply@mapdisc.com.br>',
         to: email.toLowerCase(),
         subject: `${code} — Seu novo código de verificação MapDISC`,
         html: `
