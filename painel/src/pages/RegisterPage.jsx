@@ -20,8 +20,12 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       const res = await api.register({ name: form.name, email: form.email, phone: form.phone, password: form.password, industry: form.industry, teamSize: form.teamSize })
-      login(res.token, res.user)
-      navigate('/')
+      if (res.needsVerification) {
+        navigate('/verify-email', { state: { email: res.email } })
+      } else {
+        login(res.token, res.user)
+        navigate('/')
+      }
     } catch (err) {
       setError(err.message || 'Erro ao criar conta')
     } finally {

@@ -4,6 +4,9 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
 import mongoose from 'mongoose'
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mapdisc-secret-change-me'
 
@@ -330,13 +333,46 @@ app.post('/api/auth/register', async (req, res) => {
     if (!name || !email || !password) return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' })
     const existing = await Company.findOne({ email: email.toLowerCase() }).lean()
     if (existing) return res.status(400).json({ error: 'Email já cadastrado' })
+
     const id = uuidv4()
     const hashedPassword = await bcrypt.hash(password, 12)
-    const company = { _id: id, id, name, email: email.toLowerCase(), phone, industry, teamSize, password: hashedPassword, createdAt: new Date().toISOString() }
+    const code = String(Math.floor(100000 + Math.random() * 900000))
+    const expires = new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 min
+
+    const company = {
+      _id: id, id, name, email: email.toLowerCase(), phone, industry, teamSize,
+      password: hashedPassword,
+      emailVerified: false,
+      verificationCode: code,
+      verificationExpires: expires,
+      createdAt: new Date().toISOString()
+    }
     await Company.create(company)
-    const token = jwt.sign({ id }, JWT_SECRET, { expiresIn: '7d' })
-    const { password: _, ...user } = company
-    return res.status(201).json({ token, user })
+
+    // Envia o código por email
+    try {
+      await resend.emails.send({
+        from: 'MapDISC <noreply@mapdisc.com.br>',
+        to: email.toLowerCase(),
+        subject: `${code} — Seu código de verificação MapDISC`,
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
+            <h2 style="color:#6C3AED;margin-bottom:8px;">MapDISC</h2>
+            <p style="color:#374151;font-size:16px;">Olá, <strong>${name}</strong>! Bem-vindo(a) ao MapDISC.</p>
+            <p style="color:#374151;font-size:15px;">Use o código abaixo para confirmar seu email:</p>
+            <div style="background:#F3F0FF;border-radius:12px;padding:24px;text-align:center;margin:24px 0;">
+              <span style="font-size:40px;font-weight:800;letter-spacing:10px;color:#6C3AED;">${code}</span>
+            </div>
+            <p style="color:#6B7280;font-size:13px;">Este código expira em 30 minutos.</p>
+            <p style="color:#6B7280;font-size:13px;">Se você não criou uma conta no MapDISC, pode ignorar este email.</p>
+          </div>
+        `
+      })
+    } catch (emailErr) {
+      console.error('[register] Erro ao enviar email:', emailErr.message)
+    }
+
+    return res.status(201).json({ needsVerification: true, email: email.toLowerCase() })
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
@@ -349,9 +385,72 @@ app.post('/api/auth/login', async (req, res) => {
     if (!company) return res.status(401).json({ error: 'Credenciais inválidas' })
     const valid = await bcrypt.compare(password, company.password)
     if (!valid) return res.status(401).json({ error: 'Credenciais inválidas' })
+    if (company.emailVerified === false) {
+      return res.status(403).json({ error: 'Email não verificado. Verifique sua caixa de entrada.', needsVerification: true, email: email.toLowerCase() })
+    }
     const token = jwt.sign({ id: company._id }, JWT_SECRET, { expiresIn: '7d' })
-    const { password: _, ...user } = company
+    const { password: _, verificationCode: __, verificationExpires: ___, ...user } = company
     return res.json({ token, user })
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
+// ── Verificação de email ──────────────────────────────────────────────────────
+app.post('/api/auth/verify-email', async (req, res) => {
+  try {
+    await connectDB()
+    const { email, code } = req.body
+    if (!email || !code) return res.status(400).json({ error: 'Email e código são obrigatórios' })
+    const company = await Company.findOne({ email: email.toLowerCase() }).lean()
+    if (!company) return res.status(404).json({ error: 'Conta não encontrada' })
+    if (company.emailVerified) return res.status(400).json({ error: 'Email já verificado' })
+    if (company.verificationCode !== String(code).trim()) return res.status(400).json({ error: 'Código incorreto' })
+    if (new Date(company.verificationExpires) < new Date()) return res.status(400).json({ error: 'Código expirado. Solicite um novo.' })
+
+    await Company.updateOne({ _id: company._id }, {
+      $set: { emailVerified: true },
+      $unset: { verificationCode: '', verificationExpires: '' }
+    })
+
+    const token = jwt.sign({ id: company._id }, JWT_SECRET, { expiresIn: '7d' })
+    const { password: _, verificationCode: __, verificationExpires: ___, ...user } = company
+    return res.json({ token, user: { ...user, emailVerified: true } })
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
+app.post('/api/auth/resend-code', async (req, res) => {
+  try {
+    await connectDB()
+    const { email } = req.body
+    if (!email) return res.status(400).json({ error: 'Email obrigatório' })
+    const company = await Company.findOne({ email: email.toLowerCase() }).lean()
+    if (!company) return res.status(404).json({ error: 'Conta não encontrada' })
+    if (company.emailVerified) return res.status(400).json({ error: 'Email já verificado' })
+
+    const code = String(Math.floor(100000 + Math.random() * 900000))
+    const expires = new Date(Date.now() + 30 * 60 * 1000).toISOString()
+    await Company.updateOne({ _id: company._id }, { $set: { verificationCode: code, verificationExpires: expires } })
+
+    try {
+      await resend.emails.send({
+        from: 'MapDISC <noreply@mapdisc.com.br>',
+        to: email.toLowerCase(),
+        subject: `${code} — Seu novo código de verificação MapDISC`,
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
+            <h2 style="color:#6C3AED;margin-bottom:8px;">MapDISC</h2>
+            <p style="color:#374151;font-size:15px;">Aqui está seu novo código de verificação:</p>
+            <div style="background:#F3F0FF;border-radius:12px;padding:24px;text-align:center;margin:24px 0;">
+              <span style="font-size:40px;font-weight:800;letter-spacing:10px;color:#6C3AED;">${code}</span>
+            </div>
+            <p style="color:#6B7280;font-size:13px;">Este código expira em 30 minutos.</p>
+          </div>
+        `
+      })
+    } catch (emailErr) {
+      console.error('[resend-code] Erro ao enviar email:', emailErr.message)
+    }
+
+    return res.json({ ok: true })
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 

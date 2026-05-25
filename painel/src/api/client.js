@@ -25,7 +25,7 @@ async function request(method, path, body) {
 
   if (res.status === 401) {
     // Rotas de autenticação: apenas lança o erro (não redireciona)
-    if (path.startsWith('/auth/login') || path.startsWith('/auth/register')) {
+    if (path.startsWith('/auth/')) {
       throw new Error(data.error || 'Credenciais inválidas')
     }
     // Rotas protegidas: desloga e redireciona para login
@@ -42,6 +42,8 @@ async function request(method, path, body) {
 export const api = {
   register: (data) => request('POST', '/auth/register', data),
   login: (email, password) => request('POST', '/auth/login', { email, password }),
+  verifyEmail: (email, code) => request('POST', '/auth/verify-email', { email, code }),
+  resendCode: (email) => request('POST', '/auth/resend-code', { email }),
   me: () => request('GET', '/auth/me'),
   updateMe: (data) => request('PATCH', '/auth/me', data),
   changePassword: (data) => request('PATCH', '/auth/password', data),

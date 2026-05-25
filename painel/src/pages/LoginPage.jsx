@@ -20,6 +20,11 @@ export default function LoginPage() {
       login(res.token, res.user)
       navigate('/')
     } catch (err) {
+      // Conta existe mas email não foi verificado
+      if (err.message?.includes('não verificado') || err.message?.includes('needsVerification')) {
+        navigate('/verify-email', { state: { email } })
+        return
+      }
       setError(err.message || 'Erro ao fazer login')
     } finally {
       setLoading(false)
