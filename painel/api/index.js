@@ -31,6 +31,8 @@ const Employee        = mongoose.models.Employee        || mongoose.model('Emplo
 const Invitation      = mongoose.models.Invitation      || mongoose.model('Invitation',      baseSchema())
 const DISCResult      = mongoose.models.DISCResult      || mongoose.model('DISCResult',      baseSchema())
 const CompanyFunction = mongoose.models.CompanyFunction || mongoose.model('CompanyFunction', baseSchema())
+const Job       = mongoose.models.Job       || mongoose.model('Job',       baseSchema())
+const Candidate = mongoose.models.Candidate || mongoose.model('Candidate', baseSchema())
 
 // ── Auth middleware ───────────────────────────────────────────────────────────
 function auth(req, res, next) {
@@ -609,7 +611,19 @@ app.post('/api/disc/submit', async (req, res) => {
     const rid = uuidv4()
     await DISCResult.create({ _id: rid, id: rid, employeeId: emp._id, companyId: inv.companyId, invitationId: inv._id, responses, scores, percentages, dominantType: dominant, secondaryType: secondary, analysis, relocationSuggestions, completedAt: new Date().toISOString() })
     await Invitation.updateOne({ _id: inv._id }, { $set: { used: true, usedAt: new Date().toISOString() } })
-    return res.json({ percentages, dominantType: dominant, secondaryType: secondary, description: TYPE_DESCRIPTIONS[dominant].description, analysis: { currentFunctionFit: analysis.currentFunctionFit, currentFunctionName: analysis.currentFunctionName, recommendations: analysis.recommendations, improvementTips: analysis.improvementTips, strengthsInCurrentRole: analysis.strengthsInCurrentRole, challengesInCurrentRole: analysis.challengesInCurrentRole, profileDetails: analysis.profileDetails }, relocationSuggestions })
+    // Se for convite de candidato, atualiza o registro do candidato
+    let isCandidate = false
+    if (inv.type === 'candidate' && inv.candidateId) {
+      isCandidate = true
+      const job = inv.jobId ? await Job.findOne({ _id: inv.jobId }).lean() : null
+      const fitPct = job?.discCategory ? calculateFit(percentages, job.discCategory) : 0
+      await Candidate.updateOne({ _id: inv.candidateId }, { $set: {
+        status: 'tested', discPercentages: percentages, dominantType: dominant,
+        secondaryType: secondary, fitPercentage: fitPct,
+        completedAt: new Date().toISOString()
+      }})
+    }
+    return res.json({ isCandidate, percentages, dominantType: dominant, secondaryType: secondary, description: TYPE_DESCRIPTIONS[dominant].description, analysis: { currentFunctionFit: analysis.currentFunctionFit, currentFunctionName: analysis.currentFunctionName, recommendations: analysis.recommendations, improvementTips: analysis.improvementTips, strengthsInCurrentRole: analysis.strengthsInCurrentRole, challengesInCurrentRole: analysis.challengesInCurrentRole, profileDetails: analysis.profileDetails }, relocationSuggestions })
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
@@ -640,99 +654,128 @@ app.get('/api/dashboard/stats', auth, async (req, res) => {
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
-// ── Demo seed ─────────────────────────────────────────────────────────────────
-function makeAvatar(initials, c1, c2) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:${c1}"/><stop offset="100%" style="stop-color:${c2}"/></linearGradient></defs><circle cx="100" cy="100" r="100" fill="url(#g)"/><text x="100" y="128" font-family="Arial,sans-serif" font-size="72" fill="rgba(255,255,255,.95)" text-anchor="middle" font-weight="bold" letter-spacing="-2">${initials}</text></svg>`
-  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`
-}
-
-app.post('/api/seed-demo', auth, async (req, res) => {
+// ── Seleção — Vagas ───────────────────────────────────────────────────────────
+app.get('/api/jobs', auth, async (req, res) => {
   try {
     await connectDB()
-    const companyId = req.companyId
-
-    const DEMO_EMPLOYEES = [
-      { name: 'Ana Oliveira',    jobTitle: 'Vendedora Sênior',          dept: 'Comercial',    cats: ['Vendas'],        pcts: { D:8,  I:44, S:27, C:21 }, avatar: makeAvatar('AO','#F59E0B','#D97706') },
-      { name: 'Carlos Mendes',   jobTitle: 'Analista de TI',            dept: 'Tecnologia',   cats: ['TI'],            pcts: { D:23, I:6,  S:27, C:44 }, avatar: makeAvatar('CM','#3B82F6','#1D4ED8') },
-      { name: 'Beatriz Santos',  jobTitle: 'Gestora de RH',             dept: 'Pessoas',      cats: ['RH'],            pcts: { D:23, I:6,  S:44, C:27 }, avatar: makeAvatar('BS','#10B981','#059669') },
-      { name: 'Roberto Lima',    jobTitle: 'Atendente',                 dept: 'Atendimento',  cats: ['Atendimento'],   pcts: { D:44, I:27, S:6,  C:23 }, avatar: makeAvatar('RL','#EF4444','#B91C1C') },
-      { name: 'Fernanda Costa',  jobTitle: 'Coord. de Marketing',       dept: 'Marketing',    cats: ['Marketing'],     pcts: { D:31, I:35, S:10, C:24 }, avatar: makeAvatar('FC','#F97316','#EA580C') },
-      { name: 'Marcos Silva',    jobTitle: 'Analista Financeiro',       dept: 'Financeiro',   cats: ['Financeiro'],    pcts: { D:15, I:19, S:31, C:35 }, avatar: makeAvatar('MS','#6366F1','#4338CA') },
-    ]
-
-    const DEMO_SECTORS = [
-      { id: uuidv4(), name: 'Comercial',      functions: [
-        { id: uuidv4(), name: 'Vendedor',              discCategory: 'Vendas' },
-        { id: uuidv4(), name: 'Gerente Comercial',     discCategory: 'Liderança' },
-        { id: uuidv4(), name: 'SDR / Pré-Vendas',      discCategory: 'Vendas' },
-      ]},
-      { id: uuidv4(), name: 'Operações',      functions: [
-        { id: uuidv4(), name: 'Supervisor de Equipe',  discCategory: 'Liderança' },
-        { id: uuidv4(), name: 'Auxiliar Operacional',  discCategory: 'Produção' },
-      ]},
-      { id: uuidv4(), name: 'Administrativo', functions: [
-        { id: uuidv4(), name: 'Assistente Administrativo', discCategory: 'Administração' },
-        { id: uuidv4(), name: 'Analista de RH',            discCategory: 'RH' },
-        { id: uuidv4(), name: 'Analista Financeiro Jr',    discCategory: 'Financeiro' },
-      ]},
-    ]
-
-    const created = []
-    const skipped = []
-
-    for (const d of DEMO_EMPLOYEES) {
-      const alreadyExists = await Employee.findOne({ companyId, name: d.name }).lean()
-      if (alreadyExists) { skipped.push(d.name); continue }
-
-      const eid = uuidv4()
-      const emp = {
-        _id: eid, id: eid, companyId,
-        name: d.name, email: `${d.name.toLowerCase().replace(/\s+/g,'.')}@demo.com`,
-        jobTitle: d.jobTitle, department: d.dept,
-        functionCategories: d.cats, jobDescription: '',
-        profilePhoto: d.avatar, createdAt: new Date().toISOString()
-      }
-      await Employee.create(emp)
-
-      const { dominant, secondary } = getDominantType(d.pcts)
-      const analysis = generateAnalysis(d.pcts, d.cats, d.jobTitle, '', d.name)
-
-      let relocationSuggestions = []
-      if (analysis.currentFunctionFit < 50) {
-        const suggestions = []
-        for (const sector of DEMO_SECTORS) {
-          for (const fn of sector.functions) {
-            if (fn.discCategory && FUNCTION_PROFILES[fn.discCategory]) {
-              suggestions.push({ functionName: fn.name, sectorName: sector.name, fitPercentage: calculateFit(d.pcts, fn.discCategory) })
-            }
-          }
-        }
-        relocationSuggestions = suggestions.sort((a, b) => b.fitPercentage - a.fitPercentage).slice(0, 3)
-      }
-
-      const rid = uuidv4()
-      await DISCResult.create({
-        _id: rid, id: rid, employeeId: eid, companyId,
-        invitationId: null, responses: [],
-        scores: { D:0, I:0, S:0, C:0 },
-        percentages: d.pcts,
-        dominantType: dominant, secondaryType: secondary,
-        analysis, relocationSuggestions,
-        completedAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString()
-      })
-      created.push(d.name)
-    }
-
-    // Upsert company functions
-    await CompanyFunction.findOneAndUpdate(
-      { companyId },
-      { $set: { sectors: DEMO_SECTORS } },
-      { upsert: true }
-    )
-
-    return res.json({ ok: true, created, skipped })
+    const jobs = await Job.find({ companyId: req.companyId }).lean()
+    return res.json(jobs)
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
+
+app.post('/api/jobs', auth, async (req, res) => {
+  try {
+    await connectDB()
+    const { title, department, discCategory, description } = req.body
+    if (!title) return res.status(400).json({ error: 'Título obrigatório' })
+    const id = uuidv4()
+    const job = { _id: id, id, companyId: req.companyId, title, department: department || '', discCategory: discCategory || '', description: description || '', status: 'open', createdAt: new Date().toISOString() }
+    await Job.create(job)
+    return res.status(201).json(job)
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
+app.patch('/api/jobs/:id', auth, async (req, res) => {
+  try {
+    await connectDB()
+    const { status, title, department, discCategory, description } = req.body
+    const updates = {}
+    if (status) updates.status = status
+    if (title) updates.title = title
+    if (department !== undefined) updates.department = department
+    if (discCategory !== undefined) updates.discCategory = discCategory
+    if (description !== undefined) updates.description = description
+    await Job.updateOne({ _id: req.params.id, companyId: req.companyId }, { $set: updates })
+    return res.json({ ok: true })
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
+app.delete('/api/jobs/:id', auth, async (req, res) => {
+  try {
+    await connectDB()
+    await Job.deleteOne({ _id: req.params.id, companyId: req.companyId })
+    await Candidate.deleteMany({ jobId: req.params.id, companyId: req.companyId })
+    return res.json({ ok: true })
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
+// ── Seleção — Candidatos ──────────────────────────────────────────────────────
+app.get('/api/jobs/:jobId/candidates', auth, async (req, res) => {
+  try {
+    await connectDB()
+    const candidates = await Candidate.find({ jobId: req.params.jobId, companyId: req.companyId }).lean()
+    return res.json(candidates)
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
+app.post('/api/jobs/:jobId/candidates', auth, async (req, res) => {
+  try {
+    await connectDB()
+    const job = await Job.findOne({ _id: req.params.jobId, companyId: req.companyId }).lean()
+    if (!job) return res.status(404).json({ error: 'Vaga não encontrada' })
+    const { name, email, phone } = req.body
+    if (!name) return res.status(400).json({ error: 'Nome obrigatório' })
+    const cid = uuidv4()
+    const token = uuidv4()
+    const candidate = {
+      _id: cid, id: cid, companyId: req.companyId, jobId: req.params.jobId,
+      name, email: email?.toLowerCase() || '', phone: phone || '',
+      invitationToken: token, status: 'pending',
+      discPercentages: null, dominantType: null, secondaryType: null, fitPercentage: null,
+      completedAt: null, createdAt: new Date().toISOString()
+    }
+    await Candidate.create(candidate)
+    const invId = uuidv4()
+    await Invitation.create({
+      _id: invId, id: invId, companyId: req.companyId, token,
+      employeeName: name, employeeEmail: email?.toLowerCase() || '',
+      employeeId: null, type: 'candidate', candidateId: cid, jobId: req.params.jobId,
+      used: false, expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      usedAt: null, createdAt: new Date().toISOString()
+    })
+    return res.status(201).json({ ...candidate, testLink: `/teste?token=${token}` })
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
+app.patch('/api/candidates/:id/hire', auth, async (req, res) => {
+  try {
+    await connectDB()
+    const candidate = await Candidate.findOne({ _id: req.params.id, companyId: req.companyId }).lean()
+    if (!candidate) return res.status(404).json({ error: 'Candidato não encontrado' })
+    if (!candidate.discPercentages) return res.status(400).json({ error: 'Candidato ainda não realizou o teste' })
+    const eid = uuidv4()
+    const job = candidate.jobId ? await Job.findOne({ _id: candidate.jobId }).lean() : null
+    const emp = {
+      _id: eid, id: eid, companyId: req.companyId,
+      name: candidate.name, email: candidate.email, phone: candidate.phone || '',
+      department: job?.department || '', jobTitle: job?.title || '',
+      functionCategories: job?.discCategory ? [job.discCategory] : [],
+      jobDescription: '', profilePhoto: null, createdAt: new Date().toISOString()
+    }
+    await Employee.create(emp)
+    const pcts = candidate.discPercentages
+    const { dominant, secondary } = getDominantType(pcts)
+    const analysis = generateAnalysis(pcts, emp.functionCategories, emp.jobTitle, '', emp.name)
+    const rid = uuidv4()
+    await DISCResult.create({
+      _id: rid, id: rid, employeeId: eid, companyId: req.companyId,
+      invitationId: null, responses: [], scores: { D:0,I:0,S:0,C:0 },
+      percentages: pcts, dominantType: dominant, secondaryType: secondary,
+      analysis, relocationSuggestions: [], completedAt: candidate.completedAt || new Date().toISOString()
+    })
+    await Candidate.updateOne({ _id: candidate._id }, { $set: { status: 'hired' } })
+    return res.json({ ok: true, employeeId: eid })
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
+app.get('/api/talent-bank', auth, async (req, res) => {
+  try {
+    await connectDB()
+    const candidates = await Candidate.find({ companyId: req.companyId, status: { $in: ['tested', 'hired'] } }).lean()
+    return res.json(candidates)
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
 
 // ── Company functions routes ──────────────────────────────────────────────────
 app.get('/api/company/functions', auth, async (req, res) => {

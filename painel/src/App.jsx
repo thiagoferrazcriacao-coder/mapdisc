@@ -10,6 +10,7 @@ import EmployeeDetailPage from './pages/EmployeeDetailPage'
 import InvitationsPage from './pages/InvitationsPage'
 import SettingsPage from './pages/SettingsPage'
 import CompanyFunctionsPage from './pages/CompanyFunctionsPage'
+import SelecaoPage from './pages/SelecaoPage'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth()
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="employees" element={<EmployeesPage />} />
           <Route path="employees/:id" element={<EmployeeDetailPage />} />
           <Route path="invitations" element={<InvitationsPage />} />
+          <Route path="selecao" element={<SelecaoPage />} />
           <Route path="company-functions" element={<CompanyFunctionsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>

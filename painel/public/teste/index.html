@@ -153,6 +153,17 @@ textarea.input{resize:vertical;min-height:80px}
 <p class="text-sm mt-2" style="color:#6B7280">Aguarde um momento</p>
 </div>
 
+<div id="thankyou" class="screen" style="justify-content:center;align-items:center;text-align:center">
+<div style="max-width:360px">
+<div style="width:80px;height:80px;background:linear-gradient(135deg,#7C3AED,#10B981);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px">
+<svg width="40" height="40" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+</div>
+<h2 style="font-size:24px;font-weight:800;color:#1F2937;margin-bottom:12px">Avaliação concluída!</h2>
+<p style="font-size:16px;color:#6B7280;line-height:1.6">Obrigado pela sua participação. Suas respostas foram enviadas e serão analisadas pela equipe de seleção.</p>
+<p style="font-size:14px;color:#9CA3AF;margin-top:16px">Você pode fechar esta página.</p>
+</div>
+</div>
+
 <div id="result" class="screen">
 <div class="card" style="text-align:center">
 <h2 style="font-size:22px;font-weight:700;margin-bottom:8px">Seu Perfil DISC</h2>
@@ -404,13 +415,21 @@ async function submitTest() {
       throw new Error(err.error || 'Erro ao enviar respostas')
     }
     const data = await res.json()
-    showResult(data)
+    if (data.isCandidate) {
+      showThankYou()
+    } else {
+      showResult(data)
+    }
   } catch(e) {
     alert('Erro: ' + e.message)
     goToScreen('test')
     currentQuestion = 23
     renderQuestion()
   }
+}
+
+function showThankYou() {
+  goToScreen('thankyou')
 }
 
 function showResult(data) {

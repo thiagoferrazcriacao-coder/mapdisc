@@ -58,5 +58,12 @@ export const api = {
   getDashboardStats: () => request('GET', '/dashboard/stats'),
   getCompanyFunctions: () => request('GET', '/company/functions'),
   saveCompanyFunctions: (sectors) => request('PUT', '/company/functions', { sectors }),
-  seedDemo: () => request('POST', '/seed-demo'),
+  getJobs: () => request('GET', '/jobs'),
+  createJob: (data) => request('POST', '/jobs', data),
+  updateJob: (id, data) => request('PATCH', `/jobs/${id}`, data),
+  deleteJob: (id) => request('DELETE', `/jobs/${id}`),
+  getJobCandidates: (jobId) => request('GET', `/jobs/${jobId}/candidates`),
+  addCandidate: (jobId, data) => request('POST', `/jobs/${jobId}/candidates`, data),
+  hireCandidate: (id) => request('PATCH', `/candidates/${id}/hire`),
+  getTalentBank: () => request('GET', '/talent-bank'),
 }
