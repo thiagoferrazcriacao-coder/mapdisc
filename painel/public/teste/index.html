@@ -295,19 +295,27 @@ async function init() {
 }
 
 function setupCandidateMode() {
-  // Tela de boas-vindas: mensagem para candidato
+  // Boas-vindas: mensagem para candidato
   const welcomeSub = document.querySelector('.welcome-sub')
   if (welcomeSub) welcomeSub.innerHTML = 'Bem-vindo(a) ao processo seletivo.<br>Responda com honestidade — não há resposta certa ou errada.'
-  // Simplifica a tela personal para candidatos
-  document.getElementById('photoPreview').parentElement.parentElement.style.display = 'none' // oculta área de foto
+
+  // Oculta área de foto (o div.photo-upload-area é o parentElement de photoPreview)
+  const photoArea = document.querySelector('.photo-upload-area')
+  if (photoArea) photoArea.style.display = 'none'
+
+  // Oculta departamento
   const deptField = document.getElementById('department')
-  if (deptField) deptField.parentElement.style.display = 'none' // oculta departamento
+  if (deptField && deptField.closest('.mb-4')) deptField.closest('.mb-4').style.display = 'none'
+
+  // Torna email opcional
   const emailField = document.getElementById('email')
   if (emailField) {
     emailField.removeAttribute('required')
-    emailField.parentElement.querySelector('.label').textContent = 'Email (opcional)'
+    const emailLabel = emailField.previousElementSibling
+    if (emailLabel) emailLabel.textContent = 'Email (opcional)'
   }
-  // Pré-preenche nome se já tiver
+
+  // Pré-preenche nome e email se já tiver
   if (invitationData.employeeName) document.getElementById('name').value = invitationData.employeeName
   if (invitationData.employeeEmail) document.getElementById('email').value = invitationData.employeeEmail
 }
