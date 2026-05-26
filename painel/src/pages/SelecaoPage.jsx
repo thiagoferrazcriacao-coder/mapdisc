@@ -2,32 +2,149 @@ import { useState, useEffect } from 'react'
 import { api } from '../api/client'
 
 const DISC_COLORS = { D: '#EF4444', I: '#F59E0B', S: '#10B981', C: '#3B82F6' }
+const DISC_NAMES  = { D: 'Dominante', I: 'Influente', S: 'Estável', C: 'Consciencioso' }
+const DISC_DESC   = {
+  D: 'Perfil decisivo, direto e orientado a resultados. Age com rapidez e gosta de liderar.',
+  I: 'Perfil comunicativo, entusiasmado e persuasivo. Trabalha bem em equipe e irradia energia.',
+  S: 'Perfil paciente, leal e consistente. Confiável, evita conflitos e valoriza harmonia.',
+  C: 'Perfil analítico, preciso e organizado. Segue processos e busca qualidade nas entregas.',
+}
 const DISC_CATEGORIES = ['Vendas','Liderança','Atendimento','Financeiro','Marketing','Operações','RH','TI','Produção','Administração','Ensino','Criativo']
 
-function FitBadge({ pct }) {
-  if (pct == null) return <span className="text-xs text-gray-400">Aguardando</span>
-  const color = pct >= 75 ? 'bg-green-100 text-green-800' : pct >= 50 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-  return <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>{pct}% fit</span>
+function adequacaoLabel(pct) {
+  if (pct == null) return null
+  if (pct >= 80) return { text: 'Alta adequação', color: '#10B981', bg: '#ECFDF5', border: '#6EE7B7', explain: 'O perfil comportamental é muito compatível com o que esta vaga exige.' }
+  if (pct >= 60) return { text: 'Boa adequação', color: '#F59E0B', bg: '#FFFBEB', border: '#FCD34D', explain: 'Boa compatibilidade. Algumas áreas podem precisar de desenvolvimento.' }
+  if (pct >= 40) return { text: 'Adequação média', color: '#F97316', bg: '#FFF7ED', border: '#FDBA74', explain: 'Compatibilidade parcial. Requer atenção a pontos de divergência de perfil.' }
+  return { text: 'Baixa adequação', color: '#EF4444', bg: '#FEF2F2', border: '#FCA5A5', explain: 'O perfil comportamental tem pouca compatibilidade com esta vaga.' }
 }
 
-function DISCMini({ pcts }) {
-  if (!pcts) return null
+function AdequacaoBadge({ pct }) {
+  if (pct == null) return <span className="text-xs text-gray-400 italic">Aguardando teste</span>
+  const info = adequacaoLabel(pct)
   return (
-    <div className="flex gap-1 items-end h-6">
-      {['D','I','S','C'].map(k => (
-        <div key={k} className="flex flex-col items-center gap-0.5">
-          <div className="w-3 rounded-sm" style={{ height: `${Math.round((pcts[k]/100)*20)}px`, background: DISC_COLORS[k], minHeight: 2 }} />
-          <span className="text-[9px] font-bold" style={{ color: DISC_COLORS[k] }}>{k}</span>
-        </div>
-      ))}
-    </div>
+    <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: info.bg, color: info.color, border: `1px solid ${info.border}` }}>
+      {pct}% — {info.text}
+    </span>
   )
 }
 
 function StatusBadge({ status }) {
-  const map = { pending: ['Aguardando','bg-gray-100 text-gray-600'], tested: ['Testado','bg-blue-100 text-blue-700'], hired: ['Contratado','bg-green-100 text-green-700'] }
-  const [label, cls] = map[status] || ['—','bg-gray-100 text-gray-400']
+  const map = { pending: ['Aguardando', 'bg-gray-100 text-gray-600'], tested: ['Testado', 'bg-blue-100 text-blue-700'], hired: ['Contratado', 'bg-green-100 text-green-700'] }
+  const [label, cls] = map[status] || ['—', 'bg-gray-100 text-gray-400']
   return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cls}`}>{label}</span>
+}
+
+// ── Análise detalhada do candidato ────────────────────────────────────────────
+function CandidateDetail({ candidate, job, onClose, onHire }) {
+  const [hiring, setHiring] = useState(false)
+  const pcts = candidate.discPercentages
+  const dominant = candidate.dominantType
+  const adq = adequacaoLabel(candidate.fitPercentage)
+
+  const handleHire = async () => {
+    if (!window.confirm(`Contratar ${candidate.name}? Isso vai criar o funcionário no painel.`)) return
+    setHiring(true)
+    try {
+      await api.hireCandidate(candidate.id)
+      onHire(candidate.id)
+      onClose()
+    } catch (err) { alert(err.message) }
+    finally { setHiring(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-5">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">{candidate.name}</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Vaga: <strong>{job.title}</strong></p>
+              <div className="mt-2"><StatusBadge status={candidate.status} /></div>
+            </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 ml-4">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          {!pcts ? (
+            <div className="text-center py-10 text-gray-400">
+              <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <p className="font-medium">Teste ainda não realizado</p>
+              <p className="text-sm mt-1">O candidato ainda não completou a avaliação DISC</p>
+            </div>
+          ) : (
+            <>
+              {/* Adequação à vaga — destaque principal */}
+              {adq && (
+                <div className="rounded-2xl p-5 mb-5 text-center" style={{ background: adq.bg, border: `2px solid ${adq.border}` }}>
+                  <div className="text-5xl font-black mb-1" style={{ color: adq.color }}>{candidate.fitPercentage}%</div>
+                  <div className="text-lg font-bold mb-1" style={{ color: adq.color }}>{adq.text}</div>
+                  <div className="text-sm" style={{ color: adq.color, opacity: 0.8 }}>{adq.explain}</div>
+                </div>
+              )}
+
+              {/* Perfil DISC */}
+              <div className="mb-5">
+                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Perfil Comportamental DISC</h3>
+                <div className="space-y-3">
+                  {['D','I','S','C'].map(k => (
+                    <div key={k}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0" style={{ background: DISC_COLORS[k] }}>{k}</span>
+                          <span className="text-sm font-semibold text-gray-700">{DISC_NAMES[k]}</span>
+                          {k === dominant && <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-medium">Dominante</span>}
+                        </div>
+                        <span className="text-sm font-bold" style={{ color: DISC_COLORS[k] }}>{pcts[k]}%</span>
+                      </div>
+                      <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pcts[k]}%`, background: DISC_COLORS[k] }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* O que significa */}
+              {dominant && (
+                <div className="rounded-xl p-4 mb-5" style={{ background: `${DISC_COLORS[dominant]}15`, border: `1px solid ${DISC_COLORS[dominant]}40` }}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-black" style={{ background: DISC_COLORS[dominant] }}>{dominant}</span>
+                    <span className="font-bold text-gray-800">Perfil {DISC_NAMES[dominant]}</span>
+                  </div>
+                  <p className="text-sm text-gray-600">{DISC_DESC[dominant]}</p>
+                </div>
+              )}
+
+              {/* Comparativo com a vaga */}
+              {job.discCategory && (
+                <div className="bg-gray-50 rounded-xl p-4 mb-5">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Perfil ideal da vaga</p>
+                  <p className="text-sm font-semibold text-gray-700">{job.discCategory}</p>
+                  <p className="text-xs text-gray-500 mt-1">O percentual de adequação compara o perfil do candidato com o esperado para esta função.</p>
+                </div>
+              )}
+
+              {/* Ações */}
+              {candidate.status === 'tested' && (
+                <button onClick={handleHire} disabled={hiring} className="btn-primary w-full">
+                  {hiring ? 'Contratando...' : 'Contratar este candidato'}
+                </button>
+              )}
+              {candidate.status === 'hired' && (
+                <div className="text-center py-3 text-green-600 font-semibold text-sm">
+                  Candidato já contratado como funcionário
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ── Modal criar vaga ──────────────────────────────────────────────────────────
@@ -111,7 +228,7 @@ function CandidateModal({ job, onClose, onAdded }) {
 
   const copy = () => { navigator.clipboard.writeText(link); alert('Link copiado!') }
   const whatsapp = () => {
-    const text = encodeURIComponent(`Olá, ${form.name}! Você foi convidado(a) para participar do nosso processo seletivo para a vaga de ${job.title}. Acesse o link abaixo para realizar a avaliação comportamental DISC:\n\n${link}`)
+    const text = encodeURIComponent(`Olá, ${form.name}! Você foi convidado(a) para participar do nosso processo seletivo para a vaga de *${job.title}*. Acesse o link abaixo para realizar a avaliação comportamental:\n\n${link}`)
     window.open(`https://wa.me/?text=${text}`, '_blank')
   }
 
@@ -146,7 +263,7 @@ function CandidateModal({ job, onClose, onAdded }) {
           ) : (
             <div>
               <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
-                <p className="text-sm font-medium text-green-800 mb-2">Link do teste gerado para {form.name}:</p>
+                <p className="text-sm font-medium text-green-800 mb-2">Link do teste gerado para <strong>{form.name}</strong>:</p>
                 <div className="bg-white border border-green-200 rounded-lg p-2 text-xs text-gray-700 break-all font-mono">{link}</div>
               </div>
               <div className="flex gap-2 mb-4">
@@ -169,23 +286,13 @@ function JobPanel({ job, onBack, onJobUpdated }) {
   const [candidates, setCandidates] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
-  const [hiring, setHiring] = useState(null)
+  const [selected, setSelected] = useState(null)
 
   useEffect(() => {
     api.getJobCandidates(job.id).then(setCandidates).catch(console.error).finally(() => setLoading(false))
   }, [job.id])
 
   const sorted = [...candidates].sort((a, b) => (b.fitPercentage ?? -1) - (a.fitPercentage ?? -1))
-
-  const hire = async (c) => {
-    if (!window.confirm(`Contratar ${c.name}? Isso vai criar o funcionário no painel.`)) return
-    setHiring(c.id)
-    try {
-      await api.hireCandidate(c.id)
-      setCandidates(prev => prev.map(x => x.id === c.id ? { ...x, status: 'hired' } : x))
-    } catch (err) { alert(err.message) }
-    finally { setHiring(null) }
-  }
 
   const toggleStatus = async () => {
     const newStatus = job.status === 'open' ? 'closed' : 'open'
@@ -196,6 +303,15 @@ function JobPanel({ job, onBack, onJobUpdated }) {
   return (
     <div>
       {showModal && <CandidateModal job={job} onClose={() => setShowModal(false)} onAdded={c => setCandidates(prev => [...prev, c])} />}
+      {selected && (
+        <CandidateDetail
+          candidate={selected}
+          job={job}
+          onClose={() => setSelected(null)}
+          onHire={(id) => setCandidates(prev => prev.map(c => c.id === id ? { ...c, status: 'hired' } : c))}
+        />
+      )}
+
       <div className="flex items-center gap-3 mb-6">
         <button onClick={onBack} className="text-gray-400 hover:text-gray-600">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
@@ -230,30 +346,37 @@ function JobPanel({ job, onBack, onJobUpdated }) {
         </div>
       ) : (
         <div className="space-y-2">
-          {sorted.map((c, i) => (
-            <div key={c.id} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-4 shadow-sm">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                style={{ background: c.dominantType ? DISC_COLORS[c.dominantType] : '#D1D5DB' }}>
-                {c.dominantType || (i + 1)}
+          {sorted.map((c, i) => {
+            const adq = adequacaoLabel(c.fitPercentage)
+            return (
+              <div key={c.id}
+                className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-4 shadow-sm hover:shadow-md hover:border-gray-200 transition-all cursor-pointer"
+                onClick={() => setSelected(c)}>
+                {/* Posição no ranking */}
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black text-white flex-shrink-0"
+                  style={{ background: c.dominantType ? DISC_COLORS[c.dominantType] : '#D1D5DB' }}>
+                  {c.dominantType || (i + 1)}
+                </div>
+
+                {/* Nome e email */}
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-900 truncate">{c.name}</div>
+                  <div className="text-xs text-gray-400">{c.email || 'Sem email'}</div>
+                </div>
+
+                {/* Adequação à vaga */}
+                <AdequacaoBadge pct={c.fitPercentage} />
+
+                {/* Status */}
+                <StatusBadge status={c.status} />
+
+                {/* Seta indicando clique */}
+                <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-gray-900 truncate">{c.name}</div>
-                <div className="text-xs text-gray-400">{c.email || 'Sem email'}</div>
-              </div>
-              <DISCMini pcts={c.discPercentages} />
-              <FitBadge pct={c.fitPercentage} />
-              <StatusBadge status={c.status} />
-              {c.status === 'tested' && (
-                <button onClick={() => hire(c)} disabled={hiring === c.id}
-                  className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50">
-                  {hiring === c.id ? '...' : 'Contratar'}
-                </button>
-              )}
-              {c.status === 'hired' && (
-                <span className="text-xs text-green-600 font-medium">Funcionário</span>
-              )}
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
@@ -280,7 +403,7 @@ function TalentBank() {
 
   return (
     <div className="space-y-2">
-      {candidates.sort((a,b) => (b.fitPercentage ?? -1) - (a.fitPercentage ?? -1)).map(c => (
+      {candidates.sort((a, b) => (b.fitPercentage ?? -1) - (a.fitPercentage ?? -1)).map(c => (
         <div key={c.id} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-4 shadow-sm">
           <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
             style={{ background: c.dominantType ? DISC_COLORS[c.dominantType] : '#D1D5DB' }}>
@@ -288,10 +411,9 @@ function TalentBank() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-gray-900 truncate">{c.name}</div>
-            <div className="text-xs text-gray-400">{c.email || 'Sem email'} {c.phone ? `• ${c.phone}` : ''}</div>
+            <div className="text-xs text-gray-400">{c.email || 'Sem email'}{c.phone ? ` • ${c.phone}` : ''}</div>
           </div>
-          <DISCMini pcts={c.discPercentages} />
-          <FitBadge pct={c.fitPercentage} />
+          <AdequacaoBadge pct={c.fitPercentage} />
           <StatusBadge status={c.status} />
         </div>
       ))}
@@ -301,7 +423,7 @@ function TalentBank() {
 
 // ── Página principal ──────────────────────────────────────────────────────────
 export default function SelecaoPage() {
-  const [tab, setTab] = useState('vagas') // 'vagas' | 'banco'
+  const [tab, setTab] = useState('vagas')
   const [jobs, setJobs] = useState([])
   const [loadingJobs, setLoadingJobs] = useState(true)
   const [selectedJob, setSelectedJob] = useState(null)
@@ -345,9 +467,8 @@ export default function SelecaoPage() {
         )}
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 p-1 rounded-xl mb-6 w-fit">
-        {[['vagas','Vagas'],['banco','Banco de Talentos']].map(([key, label]) => (
+        {[['vagas', 'Vagas'], ['banco', 'Banco de Talentos']].map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
             {label}
