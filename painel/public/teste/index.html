@@ -261,6 +261,7 @@ function handlePhoto(input) {
 
 let invitationToken = null
 let invitationData = null
+let isCandidate = false
 let currentQuestion = 0
 let responses = []
 let selectedMost = null
@@ -278,11 +279,12 @@ async function init() {
       const res = await fetch(API_BASE + '/invitations/public/' + invitationToken)
       if (res.ok) {
         invitationData = await res.json()
-        if (invitationData.employeeEmail) {
-          document.getElementById('email').value = invitationData.employeeEmail
-        }
-        if (invitationData.employeeName) {
-          document.getElementById('name').value = invitationData.employeeName
+        if (invitationData.isCandidate) {
+          isCandidate = true
+          setupCandidateMode()
+        } else {
+          if (invitationData.employeeEmail) document.getElementById('email').value = invitationData.employeeEmail
+          if (invitationData.employeeName) document.getElementById('name').value = invitationData.employeeName
         }
       }
     } catch(e) {
@@ -290,6 +292,24 @@ async function init() {
     }
   }
   renderCategories()
+}
+
+function setupCandidateMode() {
+  // Tela de boas-vindas: mensagem para candidato
+  const welcomeSub = document.querySelector('.welcome-sub')
+  if (welcomeSub) welcomeSub.innerHTML = 'Bem-vindo(a) ao processo seletivo.<br>Responda com honestidade — não há resposta certa ou errada.'
+  // Simplifica a tela personal para candidatos
+  document.getElementById('photoPreview').parentElement.parentElement.style.display = 'none' // oculta área de foto
+  const deptField = document.getElementById('department')
+  if (deptField) deptField.parentElement.style.display = 'none' // oculta departamento
+  const emailField = document.getElementById('email')
+  if (emailField) {
+    emailField.removeAttribute('required')
+    emailField.parentElement.querySelector('.label').textContent = 'Email (opcional)'
+  }
+  // Pré-preenche nome se já tiver
+  if (invitationData.employeeName) document.getElementById('name').value = invitationData.employeeName
+  if (invitationData.employeeEmail) document.getElementById('email').value = invitationData.employeeEmail
 }
 
 function goToScreen(id) {
@@ -301,13 +321,27 @@ function validatePersonal() {
   const name = document.getElementById('name').value.trim()
   const email = document.getElementById('email').value.trim()
   if (!name) return alert('Informe seu nome completo')
-  if (!email) return alert('Informe seu email')
+  if (!isCandidate && !email) return alert('Informe seu email')
   employeeData.name = name
   employeeData.email = email
   employeeData.phone = document.getElementById('phone').value.trim()
   employeeData.department = document.getElementById('department').value.trim()
   if (profilePhotoBase64) employeeData.profilePhoto = profilePhotoBase64
-  goToScreen('functions')
+
+  if (isCandidate) {
+    // Para candidatos: usa o perfil da vaga como categoria e vai direto ao teste
+    employeeData.functionCategories = invitationData.discCategory ? [invitationData.discCategory] : []
+    employeeData.jobTitle = invitationData.jobTitle || ''
+    employeeData.department = invitationData.department || ''
+    employeeData.jobDescription = ''
+    currentQuestion = 0
+    responses = []
+    shuffledQuestions = null
+    renderQuestion()
+    goToScreen('test')
+  } else {
+    goToScreen('functions')
+  }
 }
 
 function renderCategories() {

@@ -501,6 +501,22 @@ app.get('/api/invitations/public/:token', async (req, res) => {
     await connectDB()
     const inv = await Invitation.findOne({ token: req.params.token, used: false }).lean()
     if (!inv || new Date(inv.expiresAt) <= new Date()) return res.status(404).json({ error: 'Convite inválido ou expirado' })
+
+    // Candidato: retorna dados da vaga
+    if (inv.type === 'candidate' && inv.jobId) {
+      const job = await Job.findOne({ _id: inv.jobId }).lean()
+      return res.json({
+        isCandidate: true,
+        employeeName: inv.employeeName,
+        employeeEmail: inv.employeeEmail,
+        companyId: inv.companyId,
+        jobTitle: job?.title || '',
+        department: job?.department || '',
+        discCategory: job?.discCategory || '',
+      })
+    }
+
+    // Funcionário: retorna dados do employee
     let jobTitle = ''
     if (inv.employeeId) {
       const emp = await Employee.findOne({ _id: inv.employeeId }).lean()
