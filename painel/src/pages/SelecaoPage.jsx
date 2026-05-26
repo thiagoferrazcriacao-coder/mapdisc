@@ -152,6 +152,26 @@ function JobModal({ onClose, onCreated }) {
   const [form, setForm] = useState({ title: '', department: '', discCategory: '', description: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [sectors, setSectors] = useState([])
+  const [selectedSectorId, setSelectedSectorId] = useState('')
+  const [functionsInSector, setFunctionsInSector] = useState([])
+
+  useEffect(() => {
+    api.getCompanyFunctions().then(data => setSectors(data || [])).catch(() => {})
+  }, [])
+
+  const handleSector = (e) => {
+    const id = e.target.value
+    setSelectedSectorId(id)
+    const sector = sectors.find(s => s.id === id)
+    setFunctionsInSector(sector?.functions || [])
+    setForm(prev => ({ ...prev, department: sector?.name || '', discCategory: '' }))
+  }
+
+  const handleFunction = (e) => {
+    const fn = functionsInSector.find(f => f.id === e.target.value)
+    if (fn) setForm(prev => ({ ...prev, discCategory: fn.discCategory }))
+  }
 
   const handle = (f) => (e) => setForm(prev => ({ ...prev, [f]: e.target.value }))
 
@@ -180,8 +200,25 @@ function JobModal({ onClose, onCreated }) {
             </div>
             <div className="mb-3">
               <label className="label">Setor / Departamento</label>
-              <input className="input" value={form.department} onChange={handle('department')} placeholder="Ex: Comercial" />
+              {sectors.length > 0 ? (
+                <select className="input" value={selectedSectorId} onChange={handleSector}>
+                  <option value="">Selecionar setor...</option>
+                  {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              ) : (
+                <input className="input" value={form.department} onChange={handle('department')} placeholder="Ex: Comercial" />
+              )}
             </div>
+            {functionsInSector.length > 0 && (
+              <div className="mb-3">
+                <label className="label">Função da Empresa</label>
+                <select className="input" onChange={handleFunction} defaultValue="">
+                  <option value="">Selecionar função (define o perfil DISC)...</option>
+                  {functionsInSector.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">Ao selecionar a função, o perfil DISC ideal é preenchido automaticamente.</p>
+              </div>
+            )}
             <div className="mb-3">
               <label className="label">Perfil DISC Ideal</label>
               <select className="input" value={form.discCategory} onChange={handle('discCategory')}>
