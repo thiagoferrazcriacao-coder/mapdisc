@@ -84,15 +84,15 @@ app.get('/api/auth/me', auth, async (req, res) => {
 app.patch('/api/auth/me', auth, async (req, res) => {
   try {
     const companyId = req.companyId
-    const { name, phone, industry, teamSize } = req.body
+    const { name, phone, address, industry, teamSize } = req.body
     if (isConnected) {
-      const company = await Company.findByIdAndUpdate(companyId, { name, phone, industry, teamSize }, { new: true })
+      const company = await Company.findByIdAndUpdate(companyId, { name, phone, address, industry, teamSize }, { new: true })
       if (!company) return res.status(404).json({ error: 'Empresa não encontrada' })
       return res.json({ ...company.toJSON(), id: company._id })
     } else {
       const idx = memStore.companies.findIndex(c => c._id === companyId)
       if (idx === -1) return res.status(404).json({ error: 'Empresa não encontrada' })
-      Object.assign(memStore.companies[idx], { name, phone, industry, teamSize })
+      Object.assign(memStore.companies[idx], { name, phone, address, industry, teamSize })
       const { password, ...user } = memStore.companies[idx]
       return res.json({ ...user, id: memStore.companies[idx]._id })
     }

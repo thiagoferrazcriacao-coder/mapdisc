@@ -4,7 +4,7 @@ import { api } from '../api/client'
 
 export default function SettingsPage() {
   const { user } = useAuth()
-  const [form, setForm] = useState({ name: '', email: '', phone: '', industry: '', teamSize: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', industry: '', teamSize: '' })
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [saving, setSaving] = useState(false)
   const [savingPw, setSavingPw] = useState(false)
@@ -19,6 +19,7 @@ export default function SettingsPage() {
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
+        address: user.address || '',
         industry: user.industry || '',
         teamSize: user.teamSize || ''
       })
@@ -79,6 +80,10 @@ export default function SettingsPage() {
             <div className="mb-3">
               <label className="label">Telefone</label>
               <input type="tel" className="input" value={form.phone} onChange={e => setForm(prev => ({ ...prev, phone: e.target.value }))} />
+            </div>
+            <div className="mb-3">
+              <label className="label">Endereço da Empresa</label>
+              <input type="text" className="input" value={form.address} onChange={e => setForm(prev => ({ ...prev, address: e.target.value }))} placeholder="Rua, número, bairro, cidade - UF" />
             </div>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>

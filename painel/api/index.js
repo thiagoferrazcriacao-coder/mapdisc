@@ -466,6 +466,21 @@ app.get('/api/auth/me', auth, async (req, res) => {
   } catch (err) { return res.status(500).json({ error: err.message }) }
 })
 
+app.patch('/api/auth/me', auth, async (req, res) => {
+  try {
+    await connectDB()
+    const { name, phone, address, industry, teamSize } = req.body
+    const company = await Company.findOneAndUpdate(
+      { _id: req.companyId },
+      { $set: { name, phone, address, industry, teamSize } },
+      { new: true }
+    ).lean()
+    if (!company) return res.status(404).json({ error: 'Empresa não encontrada' })
+    const { password, ...user } = company
+    return res.json(user)
+  } catch (err) { return res.status(500).json({ error: err.message }) }
+})
+
 // ── Invitation routes ─────────────────────────────────────────────────────────
 app.post('/api/invitations', auth, async (req, res) => {
   try {

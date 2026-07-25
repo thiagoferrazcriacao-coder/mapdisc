@@ -8,6 +8,7 @@ const companySchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true },
   phone: { type: String, trim: true },
+  address: { type: String, trim: true },
   industry: { type: String, trim: true },
   teamSize: { type: String, trim: true },
   createdAt: { type: Date, default: Date.now }
